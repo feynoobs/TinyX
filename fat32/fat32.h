@@ -9,7 +9,7 @@
  */
 typedef struct _fat32
 {
-    uint32_t bootCode;
+    uint32_t bootJump;
     uint8_t oem[8];
     uint16_t bytePerSec;
     uint8_t secPerClus;
@@ -36,6 +36,8 @@ typedef struct _fat32
     uint32_t volumeId;
     uint8_t volumeLabel[11];
     uint8_t fileSystemType[8];
+    uint8_t bootCode[420];
+    uint16_t signature;
 } __attribute__ ((packed)) fat32;
 
 #endif
