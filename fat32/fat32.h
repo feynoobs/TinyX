@@ -9,20 +9,20 @@
  */
 typedef struct _fat32
 {
-    uint8_t bootJump[3];
-    uint8_t oem[8];
-    uint16_t bytePerSec;
-    uint8_t secPerClus;
-    uint16_t reserve1;
+    uint8_t jumCode[3];
+    uint8_t oemName[8];
+    uint16_t bytesPerSector;
+    uint8_t sectorsPerCluster;
+    uint16_t reserveSectors;
     uint8_t numFats;
     uint16_t rootEntryDirs;
-    uint16_t totalSec16;
+    uint16_t totalSector16;
     uint8_t media;
     uint16_t fatSize16;
-    uint16_t srcPerTruck;
+    uint16_t sectorPerTruck;
     uint16_t numHeads;
     uint32_t hidden;
-    uint32_t totalSec32;
+    uint32_t totalSector32;
     uint32_t fatSize32;
     uint16_t flags;
     uint16_t version;
