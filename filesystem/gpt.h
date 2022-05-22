@@ -23,4 +23,15 @@ typedef struct _gpt
 
 } __attribute__((packed)) gpt;
 
+typedef struct _gptEntry
+{
+    uint8_t partitionGUID[16];
+    uint8_t uniqueGUID[16];
+    uint64_t firstLBA;
+    uint64_t lastLBA;
+    uint64_t flags;
+    uint8_t partitionName[72];
+
+} __attribute__((packed)) gptEntry;
+
 #endif
