@@ -9,7 +9,7 @@
  */
 typedef struct _fat32
 {
-    uint32_t bootJump;
+    uint8_t bootJump[3];
     uint8_t oem[8];
     uint16_t bytePerSec;
     uint8_t secPerClus;
