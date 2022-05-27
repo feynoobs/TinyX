@@ -40,4 +40,15 @@ typedef struct _fat32
     uint16_t signature;
 } __attribute__ ((packed)) fat32;
 
+typedef struct _fsinfo
+{
+    uint32_t signature1;
+    uint8_t reserved1[480];
+    uint32_t signature2;
+    uint32_t freeCluster;
+    uint32_t lastAllocateCluster;
+    uint8_t reserve2[12];
+    uint32_t signature3;
+} __attribute__((packed)) fsinfo;
+a
 #endif
