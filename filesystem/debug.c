@@ -13,6 +13,7 @@ void dumpTree(uint64_t origin, FILE *fr, uint32_t *fat, int indent, int pos)
     for (int cnt = 0;; ++cnt) {
         if (cnt % 16 == 0) {
             if (next < 0x0FFFFFF8) {
+                printf("%08X\n", origin + next * 512);
                 fseek(fr, origin + next * 512, SEEK_SET);
                 fread(sect, sizeof(sect), 1, fr);
                 next = fat[pos];
@@ -30,8 +31,10 @@ void dumpTree(uint64_t origin, FILE *fr, uint32_t *fat, int indent, int pos)
             }
             putchar('\n');
             if (sect[cnt % 16].attr & 0x10) {
-                int cur = sect[cnt % 16].clusterHi << 16 | sect[cnt % 16].clusterLo;
-                dumpTree(origin, fr, fat, indent + 4, cur);
+                if (sect[cnt % 16].name[0] != 0x2E) {
+                    int cur = sect[cnt % 16].clusterHi << 16 | sect[cnt % 16].clusterLo;
+                    dumpTree(origin, fr, fat, indent + 4, cur - 2);
+                }
             }
         }
     }
@@ -190,6 +193,7 @@ int main(void)
 
     uint32_t *fat = (uint32_t *)malloc(f.fatSize32 * f.bytesPerSector);
     fseek(fr, (f.reserveSectors -2) * f.bytesPerSector, SEEK_CUR);
+    printf("%08lX\n", ftell(fr));
     fread(fat, f.fatSize32 * f.bytesPerSector, 1, fr);
     puts("dump ROOT...");
     fseek(fr, f.fatSize32 * f.bytesPerSector, SEEK_CUR);
