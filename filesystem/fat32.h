@@ -40,7 +40,7 @@ typedef struct _fat32
     uint16_t signature;
 } __attribute__ ((packed)) fat32;
 
-typedef struct _fsinfo
+typedef struct _fat32fsinfo
 {
     uint32_t signature1;
     uint8_t reserved1[480];
@@ -49,6 +49,23 @@ typedef struct _fsinfo
     uint32_t lastAllocateCluster;
     uint8_t reserve2[12];
     uint32_t signature3;
-} __attribute__((packed)) fsinfo;
+} __attribute__((packed)) fat32fsinfo;
+
+typedef struct _fat32entry
+{
+    uint8_t name[11];
+    uint8_t attr;
+    uint8_t opt;
+    uint8_t subtime;
+    uint16_t createdTime;
+    uint16_t createdDate;
+    uint16_t accessDate;
+    uint16_t clusterHi;
+    uint16_t writedTime;
+    uint16_t writedDate;
+    uint16_t clusterLo;
+    uint32_t fileSize;
+
+} __attribute__((packed)) fat32entry;
 
 #endif

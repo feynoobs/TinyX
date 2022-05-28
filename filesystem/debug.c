@@ -99,6 +99,7 @@ int main(void)
         putchar('\n');
     }
     fseek(fr, e[0].firstLBA * 512,SEEK_SET);
+    printf("*** %d ***\n", ftell(fr) / 512);
     fat32 f;
     fread(&f, sizeof(fat32), 1, fr);
     puts("dump Fat32...");
@@ -131,8 +132,8 @@ int main(void)
     printf("fsinfoEntrySector: %u\n", f.fsinfoEntrySector);
     printf("backupBootSector: %u\n", f.backupBootSector);
     printf("drive: %02X\n", f.drive);
-    printf("drive: %02X\n", f.bootSignature);
-    printf("drive: %u\n", f.volumeId);
+    printf("bootSignature: %02X\n", f.bootSignature);
+    printf("volumeId: %u\n", f.volumeId);
     printf("volumeLabel: ");
     for (int i = 0; i < sizeof(f.volumeLabel); ++i) {
         printf("%c", f.volumeLabel[i]);
@@ -145,15 +146,42 @@ int main(void)
     putchar('\n');
     printf("signature: %04X\n", f.signature);
 
-    fsinfo fi;
-    fread(&fi, sizeof(fsinfo), 1, fr);
+    fat32fsinfo fi;
+    fread(&fi, sizeof(fat32fsinfo), 1, fr);
     puts("dump FSINFO...");
     printf("signature1: %04X\n", fi.signature1);
     printf("signature2: %04X\n", fi.signature2);
     printf("freeCluster: %u\n", fi.freeCluster);
     printf("lastAllocateCluster: %u\n", fi.lastAllocateCluster);
     printf("signature3: %04X\n", fi.signature3);
+// printf("%08X\n", ftell(fr));
 
+    puts("dump ROOT...");
+    fseek(fr, (f.reserveSectors -2 + f.fatSize32 * f.numFats) * f.bytesPerSector, SEEK_CUR);
+    for (int i = 0; i < 51 ; ++i) {
+        fat32entry fe;
+        fread(&fe, sizeof(fe), 1, fr);
+        if (fe.attr != 0) {
+            printf("%d\n", i * sizeof(fe) / 512);
+            printf("name: ");
+            for (int j = 0; j < sizeof(fe.name); ++j) {
+                putchar(fe.name[j]);
+                // printf("%02X", fe.name[j]);
+            }
+            putchar('\n');
+            printf("attr: %02x\n", fe.attr);
+            printf("opt: %02x\n", fe.opt);
+            printf("subtime: %u\n", fe.subtime);
+            printf("createdTime: %u\n", fe.createdTime);
+            printf("createdDate: %u\n", fe.createdDate);
+            printf("accessDate: %u\n", fe.accessDate);
+            printf("clusterHi: %04X\n", fe.clusterHi);
+            printf("writedTime: %u\n", fe.writedTime);
+            printf("writedDate: %u\n", fe.writedDate);
+            printf("clusterLo: %04X\n", fe.clusterLo);
+            printf("fileSize: %u\n", fe.fileSize);
+        }
+    }
     fclose(fr);
 
     return 0;
