@@ -145,6 +145,15 @@ int main(void)
     putchar('\n');
     printf("signature: %04X\n", f.signature);
 
+    fsinfo fi;
+    fread(&fi, sizeof(fsinfo), 1, fr);
+    puts("dump FSINFO...");
+    printf("signature1: %04X\n", fi.signature1);
+    printf("signature2: %04X\n", fi.signature2);
+    printf("freeCluster: %u\n", fi.freeCluster);
+    printf("lastAllocateCluster: %u\n", fi.lastAllocateCluster);
+    printf("signature3: %04X\n", fi.signature3);
+
     fclose(fr);
 
     return 0;

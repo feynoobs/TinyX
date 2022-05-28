@@ -50,5 +50,5 @@ typedef struct _fsinfo
     uint8_t reserve2[12];
     uint32_t signature3;
 } __attribute__((packed)) fsinfo;
-a
+
 #endif
