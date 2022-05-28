@@ -1,9 +1,41 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 
 #include "mbr.h"
 #include "gpt.h"
 #include "fat32.h"
+
+void dumpTree(uint64_t origin, FILE *fr, uint32_t *fat, int indent, int pos)
+{
+    fat32entry sect[16];
+    int next = pos;
+    for (int cnt = 0;; ++cnt) {
+        if (cnt % 16 == 0) {
+            if (next < 0x0FFFFFF8) {
+                fseek(fr, origin + next * 512, SEEK_SET);
+                fread(sect, sizeof(sect), 1, fr);
+                next = fat[pos];
+            }
+            else {
+                break;
+            }
+        }
+        if (sect[cnt % 16].attr != 0) {
+            for (int i = 0; i < indent; ++i) {
+                putchar(' ');
+            }
+            for (int i = 0; i < 11; ++i) {
+                putchar(sect[cnt % 16].name[i]);
+            }
+            putchar('\n');
+            if (sect[cnt % 16].attr & 0x10) {
+                int cur = sect[cnt % 16].clusterHi << 16 | sect[cnt % 16].clusterLo;
+                dumpTree(origin, fr, fat, indent + 4, cur);
+            }
+        }
+    }
+}
 
 int main(void)
 {
@@ -156,8 +188,14 @@ int main(void)
     printf("signature3: %04X\n", fi.signature3);
 // printf("%08X\n", ftell(fr));
 
+    uint32_t *fat = (uint32_t *)malloc(f.fatSize32 * f.bytesPerSector);
+    fseek(fr, (f.reserveSectors -2) * f.bytesPerSector, SEEK_CUR);
+    fread(fat, f.fatSize32 * f.bytesPerSector, 1, fr);
     puts("dump ROOT...");
-    fseek(fr, (f.reserveSectors -2 + f.fatSize32 * f.numFats) * f.bytesPerSector, SEEK_CUR);
+    fseek(fr, f.fatSize32 * f.bytesPerSector, SEEK_CUR);
+    dumpTree(ftell(fr), fr, fat, 0, 0);
+    // fseek(fr, (f.reserveSectors - 2 + f.fatSize32 * f.numFats) * f.bytesPerSector, SEEK_CUR);
+    /*
     for (int i = 0; i < 51 ; ++i) {
         fat32entry fe;
         fread(&fe, sizeof(fe), 1, fr);
@@ -182,6 +220,7 @@ int main(void)
             printf("fileSize: %u\n", fe.fileSize);
         }
     }
+    */
     fclose(fr);
 
     return 0;
