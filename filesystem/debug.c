@@ -13,10 +13,9 @@ void dumpTree(uint64_t origin, FILE *fr, uint32_t *fat, int indent, int pos)
     for (int cnt = 0;; ++cnt) {
         if (cnt % 16 == 0) {
             if (next < 0x0FFFFFF8) {
-                printf("%08X\n", origin + next * 512);
                 fseek(fr, origin + next * 512, SEEK_SET);
                 fread(sect, sizeof(sect), 1, fr);
-                next = fat[pos];
+                next = fat[next];
             }
             else {
                 break;
@@ -30,6 +29,25 @@ void dumpTree(uint64_t origin, FILE *fr, uint32_t *fat, int indent, int pos)
                 putchar(sect[cnt % 16].name[i]);
             }
             putchar('\n');
+            if (sect[cnt % 16].attr & 0x20) {
+                for (int i = 0; i < indent; ++i) {
+                    putchar(' ');
+                }
+                int st = sect[cnt % 16].clusterHi << 16 | sect[cnt % 16].clusterLo;
+                int size = sect[cnt % 16].fileSize;
+                for (;;) {
+                    uint8_t buf[512];
+                    fseek(fr, origin + (st-2) * 512, SEEK_SET);
+                    fread(buf, sizeof(buf), 1, fr);
+                    for (int i = 0; i < 512; ++i) {
+                        putchar(buf[i]);
+                    }
+                    st = fat[st];
+                    if (st >= 0x0FFFFFF8) {
+                        break;
+                    }
+                }
+            }
             if (sect[cnt % 16].attr & 0x10) {
                 if (sect[cnt % 16].name[0] != 0x2E) {
                     int cur = sect[cnt % 16].clusterHi << 16 | sect[cnt % 16].clusterLo;
