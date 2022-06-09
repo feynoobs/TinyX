@@ -1,7 +1,7 @@
 ARCH            = `arch`
 
 OBJS            = boot.o
-TARGET          = boot.efi
+TARGET          = BOOTX64.EFI
 
 EFIINC          = /usr/include/efi
 EFIINCS         = -I$(EFIINC) -I$(EFIINC)/$(ARCH) -I$(EFIINC)/protocol
@@ -19,11 +19,11 @@ LDFLAGS         = -nostdlib -znocombreloc -T $(EFI_LDS) -shared -Bsymbolic -L $(
 
 all: $(TARGET)
 
-boot.so: $(OBJS)
+BOOTX64.so: $(OBJS)
 	ld $(LDFLAGS) $(OBJS) -o $@ -lefi -lgnuefi
 
-%.efi: %.so
+%.EFI: %.so
 	objcopy -j .text -j .sdata -j .data -j .dynamic -j .dynsym  -j .rel -j .rela -j .reloc --target=efi-app-$(ARCH) $^ $@
 
 clean:
-	rm boot.o boot.so boot.efi
+	rm -f *.o *.so *.EFI

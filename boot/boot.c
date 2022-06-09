@@ -10,19 +10,29 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
     EFI_STATUS status;
     EFI_HANDLE handle;
     EFI_LOADED_IMAGE *img;
-    EFI_DEVICE_PATH *imgpath;
+    EFI_DEVICE_PATH *imgPath;
     EFI_BLOCK_IO *blkio;
+    EFI_DEVICE_PATH_TO_TEXT_PROTOCOL *text;
+    CHAR16 *disp;
 
     EFI_GUID LoadedImageGUID = LOADED_IMAGE_PROTOCOL;
     EFI_GUID DevicePathGUID = DEVICE_PATH_PROTOCOL;
     EFI_GUID BlockIoProtocolGUID = BLOCK_IO_PROTOCOL;
+    EFI_GUID DevicePathToTextGUID = EFI_DEVICE_PATH_TO_TEXT_PROTOCOL_GUID;
 
     Print(L"TinyX Boot Loader\n");
     status = uefi_call_wrapper(BS->HandleProtocol, 3, image, &LoadedImageGUID, (VOID **)&img);
     if (status == EFI_SUCCESS) {
-        status = uefi_call_wrapper(img->DeviceHandle, 2, &DevicePathGUID, (VOID **)&imgpath);
+        status = uefi_call_wrapper(BS->LocateProtocol, 3, &DevicePathToTextGUID, NULL, (VOID **)&text);
+        Print(L"*** %d ***\n", status);
         if (status == EFI_SUCCESS) {
-            status = uefi_call_wrapper(BS->LocateHandle, 3, ByProtocol, &BlockIoProtocolGUID, (VOID **)&blkio);
+            disp = text->ConvertDevicePathToText(img->FilePath, TRUE, TRUE);
+            Print(L"%s\n", disp);
+            status = uefi_call_wrapper(BS->HandleProtocol, 3, img->DeviceHandle, &DevicePathGUID, (VOID **)&imgPath);
+            if (status == EFI_SUCCESS) {
+                disp = text->ConvertDevicePathToText(imgPath, TRUE, TRUE);
+                Print(L"%s\n", disp);
+            }
         }
     }
 
