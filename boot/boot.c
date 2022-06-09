@@ -24,14 +24,13 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
     status = uefi_call_wrapper(BS->HandleProtocol, 3, image, &LoadedImageGUID, (VOID **)&img);
     if (status == EFI_SUCCESS) {
         status = uefi_call_wrapper(BS->LocateProtocol, 3, &DevicePathToTextGUID, NULL, (VOID **)&text);
-        Print(L"*** %d ***\n", status);
         if (status == EFI_SUCCESS) {
-            disp = text->ConvertDevicePathToText(img->FilePath, TRUE, TRUE);
-            Print(L"%s\n", disp);
+            disp = (CHAR16 *)uefi_call_wrapper(text->ConvertDevicePathToText, 3, img->FilePath, TRUE, TRUE);
+            Print(L"Loader path:%s\n", disp);
             status = uefi_call_wrapper(BS->HandleProtocol, 3, img->DeviceHandle, &DevicePathGUID, (VOID **)&imgPath);
             if (status == EFI_SUCCESS) {
-                disp = text->ConvertDevicePathToText(imgPath, TRUE, TRUE);
-                Print(L"%s\n", disp);
+                disp = uefi_call_wrapper(text->ConvertDevicePathToText, imgPath, TRUE, TRUE);
+                Print(L"Load Device:%s\n", disp);
             }
         }
     }
