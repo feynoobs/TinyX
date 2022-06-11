@@ -1,7 +1,17 @@
 #include <efi.h>
 #include <efilib.h>
 
-EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
+VOID *
+Malloc(EFI_BOOT_SERVICES *BS, UINT64 length)
+{
+    VOID *memory;
+    EFI_STATUS status;
+
+    status = uefi_call_wrapper(BS->AllocatePool, 2, length, (VOID **)&memory);
+}
+
+EFI_STATUS
+efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
 {
     InitializeLib(image, table);
 
@@ -29,11 +39,12 @@ EFI_STATUS efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
             Print(L"Loader path:%s\n", disp);
             status = uefi_call_wrapper(BS->HandleProtocol, 3, img->DeviceHandle, &DevicePathGUID, (VOID **)&imgPath);
             if (status == EFI_SUCCESS) {
-                disp = uefi_call_wrapper(text->ConvertDevicePathToText, imgPath, TRUE, TRUE);
+                disp = (CHAR16 *)uefi_call_wrapper(text->ConvertDevicePathToText, 3, imgPath, TRUE, TRUE);
                 Print(L"Load Device:%s\n", disp);
             }
         }
     }
 
+    for (;;) ;
     return EFI_SUCCESS;
 }
