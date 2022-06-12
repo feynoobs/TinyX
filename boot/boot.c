@@ -150,9 +150,8 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
                     BOOLEAN match = FALSE;
                     imgPath = keepImgPath;
                     while ((IsDevicePathEnd(imgPath) == FALSE) && (IsDevicePathEnd(devPath) == FALSE)) {
-                        UINTN length;
-                        if (IsDevicePathType(imgPath, MEDIA_DEVICE_PATH)) {
-                            if (IsDevicePathType(devPath, MEDIA_DEVICE_PATH)) {
+                        if (DevicePathType(imgPath) == MEDIA_DEVICE_PATH) {
+                            if (DevicePathType(devPath) == MEDIA_DEVICE_PATH) {
                                 match = TRUE;
                                 break;
                             }
