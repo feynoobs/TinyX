@@ -7,7 +7,7 @@ Malloc(EFI_BOOT_SERVICES *BS, UINT64 length)
     VOID *memory;
     EFI_STATUS status;
 
-    status = uefi_call_wrapper(BS->AllocatePool, 2, length, (VOID **)&memory);
+    status = uefi_call_wrapper(BS->AllocatePool, 3, EfiLoaderData, length, (VOID **)&memory);
     if (status != EFI_SUCCESS) {
         memory = NULL;
     }
@@ -35,7 +35,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
     EFI_BLOCK_IO *blkio;
     EFI_DEVICE_PATH_TO_TEXT_PROTOCOL *text;
     CHAR16 *disp;
-    UINTN size;
+    UINTN size, nHanles;
     BOOLEAN goNext;
 
     EFI_GUID LoadedImageGUID = LOADED_IMAGE_PROTOCOL;
@@ -71,6 +71,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
         Print(L"Load Device:%s\n", disp);
         size = sizeof(EFI_HANDLE);
         handles = (EFI_HANDLE *)Malloc(BS, size);
+        Print(L"Allocate: %016X", handles);
         if (handles == NULL) {
             goNext = FALSE;
         }
@@ -78,6 +79,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
 
     if (goNext == TRUE) {
         status = uefi_call_wrapper(BS->LocateHandle, 5, ByProtocol, &BlockIoProtocolGUID, NULL, &size, handles);
+        Print(L"+++ %d +++\n", status);
         switch (status) {
             case EFI_SUCCESS:
                 break;
@@ -97,6 +99,11 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
             default:
                 goNext = FALSE;
         }
+    }
+
+    if (goNext == TRUE) {
+        nHanles = size / sizeof(EFI_HANDLE);
+        Print(L"Probing %u block devices...", nHanles);
     }
 
     for (;;) ;
