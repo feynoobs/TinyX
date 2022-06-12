@@ -1,7 +1,7 @@
 #include <efi.h>
 #include <efilib.h>
 
-VOID *
+static VOID *
 Malloc(EFI_BOOT_SERVICES *BS, UINT64 length)
 {
     VOID *memory;
@@ -15,13 +15,13 @@ Malloc(EFI_BOOT_SERVICES *BS, UINT64 length)
     return memory;
 }
 
-VOID
+static VOID
 Free(EFI_BOOT_SERVICES *BS, VOID *memory)
 {
     uefi_call_wrapper(BS->FreePool, 1, memory);
 }
 
-INTN
+static INTN
 Memcmp(const VOID *s1, const VOID *s2, UINTN length)
 {
     const UINT8 *p1 = (UINT8 *)s1;
@@ -39,7 +39,7 @@ Memcmp(const VOID *s1, const VOID *s2, UINTN length)
     return ret;
 }
 
-BOOLEAN
+static BOOLEAN
 IsNodeMatch(EFI_DEVICE_PATH *imgPath, EFI_DEVICE_PATH *devPath)
 {
     BOOLEAN match = FALSE;
@@ -58,6 +58,11 @@ IsNodeMatch(EFI_DEVICE_PATH *imgPath, EFI_DEVICE_PATH *devPath)
     return match;
 }
 
+static VOID
+LoadKernel(EFI_BLOCK_IO *block)
+{
+    Print(L"Kernel Loader %08X\n", (VOID *)block);
+}
 
 EFI_STATUS
 efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
@@ -70,7 +75,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
     EFI_HANDLE *handles;
     EFI_LOADED_IMAGE *img;
     EFI_DEVICE_PATH *keepImgPath, *imgPath, *devPath;
-    EFI_BLOCK_IO *blkio;
+    EFI_BLOCK_IO *block;
     EFI_DEVICE_PATH_TO_TEXT_PROTOCOL *text;
     CHAR16 *disp;
     UINTN size, nHanles;
@@ -110,58 +115,63 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
         Print(L"Load Device:%s\n", disp);
         size = sizeof(EFI_HANDLE);
         handles = (EFI_HANDLE *)Malloc(BS, size);
-        Print(L"Allocate: %016X", handles);
-        if (handles == NULL) {
+        if (handles != NULL) {
+            status = uefi_call_wrapper(BS->LocateHandle, 5, ByProtocol, &BlockIoProtocolGUID, NULL, &size, handles);
+            switch (status) {
+                case EFI_SUCCESS:
+                    break;
+                case EFI_BUFFER_TOO_SMALL:
+                    Free(BS, (VOID *)handles);
+                    handles = Malloc(BS, size);
+                    if (handles == NULL) {
+                        goNext = FALSE;
+                    }
+                    else {
+                        status = uefi_call_wrapper(BS->LocateHandle, 5, ByProtocol, &BlockIoProtocolGUID, NULL, &size, handles);
+                        if (status != EFI_SUCCESS) {
+                            goNext = FALSE;
+                        }
+                    }
+                    break;
+                default:
+                    goNext = FALSE;
+            }
+        }
+        else {
             goNext = FALSE;
         }
     }
 
     if (goNext == TRUE) {
-        status = uefi_call_wrapper(BS->LocateHandle, 5, ByProtocol, &BlockIoProtocolGUID, NULL, &size, handles);
-        switch (status) {
-            case EFI_SUCCESS:
-                break;
-            case EFI_BUFFER_TOO_SMALL:
-                Free(BS, (VOID *)handles);
-                handles = Malloc(BS, size);
-                if (handles == NULL) {
-                    goNext = FALSE;
-                }
-                else {
-                    status = uefi_call_wrapper(BS->LocateHandle, 5, ByProtocol, &BlockIoProtocolGUID, NULL, &size, handles);
-                    if (status != EFI_SUCCESS) {
-                        goNext = FALSE;
-                    }
-                }
-                break;
-            default:
-                goNext = FALSE;
-        }
-    }
-
-    if (goNext == TRUE) {
         nHanles = size / sizeof(EFI_HANDLE);
-        Print(L"Probing %u block devices...", nHanles);
+        Print(L"Probing %u block devices...\n", nHanles);
         for (UINTN i = 0; i < nHanles; ++i) {
             status = uefi_call_wrapper(BS->HandleProtocol, 3, handles[i], &DevicePathGUID, (VOID **)&devPath);
+            Print(L"status1 : %d\n", status);
             if (status == EFI_SUCCESS) {
-                status = uefi_call_wrapper(BS->HandleProtocol, 3, handles[i], &BlockIoProtocolGUID, (VOID **)&blkio);
-                if (blkio->Media->LogicalPartition == TRUE) {
-                    BOOLEAN match = FALSE;
-                    imgPath = keepImgPath;
-                    while ((IsDevicePathEnd(imgPath) == FALSE) && (IsDevicePathEnd(devPath) == FALSE)) {
-                        if (DevicePathType(imgPath) == MEDIA_DEVICE_PATH) {
-                            if (DevicePathType(devPath) == MEDIA_DEVICE_PATH) {
-                                match = TRUE;
+                status = uefi_call_wrapper(BS->HandleProtocol, 3, handles[i], &BlockIoProtocolGUID, (VOID **)&block);
+                Print(L"status2 : %d\n", status);
+                if (status == EFI_SUCCESS) {
+                    if (block->Media->LogicalPartition == TRUE) {
+                        BOOLEAN match = FALSE;
+                        imgPath = keepImgPath;
+                        while ((IsDevicePathEnd(imgPath) == FALSE) && (IsDevicePathEnd(devPath) == FALSE)) {
+                            if (DevicePathType(imgPath) == MEDIA_DEVICE_PATH) {
+                                if (DevicePathType(devPath) == MEDIA_DEVICE_PATH) {
+                                    match = TRUE;
+                                    break;
+                                }
+                            }
+                            if (IsNodeMatch(imgPath, devPath) == FALSE) {
                                 break;
                             }
-                        }
-                        if (IsNodeMatch(imgPath, devPath) == FALSE) {
-                            break;
-                        }
 
-                        imgPath = NextDevicePathNode(imgPath);
-                        devPath = NextDevicePathNode(devPath);
+                            imgPath = NextDevicePathNode(imgPath);
+                            devPath = NextDevicePathNode(devPath);
+                        }
+                        if (match == TRUE) {
+                            LoadKernel(block);
+                        }
                     }
                 }
             }
