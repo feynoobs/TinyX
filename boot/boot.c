@@ -70,7 +70,6 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
     InitializeLib(image, table);
 
     EFI_BOOT_SERVICES *BS = table->BootServices;
-    EFI_RUNTIME_SERVICES *RS = table->RuntimeServices;
     EFI_STATUS status;
     EFI_HANDLE *handles;
     EFI_LOADED_IMAGE *img;
@@ -103,9 +102,10 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
     if (goNext == TRUE) {
         disp = (CHAR16 *)uefi_call_wrapper(text->ConvertDevicePathToText, 3, img->FilePath, TRUE, TRUE);
         Print(L"Loader path:%s\n", disp);
+        Free(BS, disp);
         status = uefi_call_wrapper(BS->HandleProtocol, 3, img->DeviceHandle, &DevicePathGUID, (VOID **)&imgPath);
+        keepImgPath = imgPath;
         if (status != EFI_SUCCESS) {
-            keepImgPath = imgPath;
             goNext = FALSE;
         }
     }
@@ -113,6 +113,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
     if (goNext == TRUE) {
         disp = (CHAR16 *)uefi_call_wrapper(text->ConvertDevicePathToText, 3, imgPath, TRUE, TRUE);
         Print(L"Load Device:%s\n", disp);
+        Free(BS, disp);
         size = sizeof(EFI_HANDLE);
         handles = (EFI_HANDLE *)Malloc(BS, size);
         if (handles != NULL) {
@@ -147,10 +148,11 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
         Print(L"Probing %u block devices...\n", nHanles);
         for (UINTN i = 0; i < nHanles; ++i) {
             status = uefi_call_wrapper(BS->HandleProtocol, 3, handles[i], &DevicePathGUID, (VOID **)&devPath);
-            Print(L"status1 : %d\n", status);
             if (status == EFI_SUCCESS) {
+                disp = (CHAR16 *)uefi_call_wrapper(text->ConvertDevicePathToText, 3, devPath, TRUE, TRUE);
+                Print(L"Probing %u -> %s\n", i + 1, disp);
+                Free(BS, disp);
                 status = uefi_call_wrapper(BS->HandleProtocol, 3, handles[i], &BlockIoProtocolGUID, (VOID **)&block);
-                Print(L"status2 : %d\n", status);
                 if (status == EFI_SUCCESS) {
                     if (block->Media->LogicalPartition == TRUE) {
                         BOOLEAN match = FALSE;
@@ -178,6 +180,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
         }
     }
 
+    Print(L"Fail to Ban\n");
     for (;;) ;
     return EFI_SUCCESS;
 }
