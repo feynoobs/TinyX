@@ -61,7 +61,17 @@ IsNodeMatch(EFI_DEVICE_PATH *imgPath, EFI_DEVICE_PATH *devPath)
 static VOID
 LoadKernel(EFI_BLOCK_IO *block)
 {
+    UINT32 bufSize = 512;
+    UINT32 buffer[bufSize / 4];
     Print(L"Kernel Loader %08X\n", (VOID *)block);
+    Print(L"block size:%d\n", block->Media->BlockSize);
+    uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, 0, bufSize, (VOID *)buffer);
+    for (int i = 0; i < sizeof(buffer) / 4; ++i) {
+        if (i % 8 == 0) {
+            Print(L"\n");
+        }
+        Print(L"%08X ", buffer[i]);
+    }
 }
 
 EFI_STATUS
