@@ -1,6 +1,8 @@
 #include <efi.h>
 #include <efilib.h>
 
+#include "file/fat32.h"
+
 static VOID *
 Malloc(EFI_BOOT_SERVICES *BS, UINT64 length)
 {
@@ -59,18 +61,25 @@ IsNodeMatch(EFI_DEVICE_PATH *imgPath, EFI_DEVICE_PATH *devPath)
 }
 
 static VOID
-LoadKernel(EFI_BLOCK_IO *block)
+LoadKernel(EFI_BOOT_SERVICES *BS, EFI_BLOCK_IO *block)
 {
-    UINT32 bufSize = 512;
-    UINT32 buffer[bufSize / 4];
-    Print(L"Kernel Loader %08X\n", (VOID *)block);
+    EFI_STATUS status;
+
     Print(L"block size:%d\n", block->Media->BlockSize);
-    uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, 0, bufSize, (VOID *)buffer);
-    for (int i = 0; i < sizeof(buffer) / 4; ++i) {
-        if (i % 8 == 0) {
-            Print(L"\n");
-        }
-        Print(L"%08X ", buffer[i]);
+
+    fat32 *fat32Data = (fat32 *)Malloc(BS, sizeof(fat32));
+    status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, 0, sizeof(fat32), (VOID *)fat32Data);
+    if (status == EFI_SUCCESS) {
+        Print(L"Fat32 Dump...\n");
+        Print(L"bytesPerSector -> %u\n", fat32Data->bytesPerSector);
+        Print(L"sectorsPerCluster -> %u\n", fat32Data->sectorsPerCluster);
+        Print(L"reserveSectors -> %u\n", fat32Data->reserveSectors);
+        Print(L"numFats -> %u\n", fat32Data->numFats);
+        Print(L"totalSector32 -> %u\n", fat32Data->totalSector32);
+        Print(L"fatSize32 -> %u\n", fat32Data->fatSize32);
+        Print(L"fsinfoEntrySector -> %u\n", fat32Data->fsinfoEntrySector);
+        Print(L"backupBootSector -> %u\n", fat32Data->backupBootSector);
+        Print(L"signature  -> %04X\n", fat32Data->signature);
     }
 }
 
@@ -182,7 +191,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
                             devPath = NextDevicePathNode(devPath);
                         }
                         if (match == TRUE) {
-                            LoadKernel(block);
+                            LoadKernel(BS, block);
                         }
                     }
                 }
