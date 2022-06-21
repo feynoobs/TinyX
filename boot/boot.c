@@ -80,7 +80,50 @@ LoadKernel(EFI_BOOT_SERVICES *BS, EFI_BLOCK_IO *block)
         Print(L"fsinfoEntrySector -> %u\n", fat32Data->fsinfoEntrySector);
         Print(L"backupBootSector -> %u\n", fat32Data->backupBootSector);
         Print(L"signature  -> %04X\n", fat32Data->signature);
+
+        UINTN rootLBA = fat32Data->fatSize32 * fat32Data->numFats + fat32Data->reserveSectors;
+        UINTN fatLBA = fat32Data->reserveSectors;
+        fat32entry *fat32EntryData = (fat32entry *)Malloc(BS, sizeof(fat32entry) * 16);
+        status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA, sizeof(fat32entry) * 16, (VOID *)fat32EntryData);
+        if (status == EFI_SUCCESS) {
+            Print(L"Fat32 Entry Dump...\n");
+            for (INT8 i = 0; i < 16; ++i) {
+                if (fat32EntryData[i].name[0] != 0x00) {
+                    if (fat32EntryData[i].name[0] != 0xE5) {
+                        UINTN cluster = fat32EntryData[i].clusterHi << 16 | fat32EntryData[i].clusterLo;
+                        Print(L"name ->");
+                        for (INT8 j = 0; j < sizeof(fat32EntryData[i].name); ++j) {
+                            Print(L"%c", fat32EntryData[i].name[j]);
+                        }
+                        Print(L"\n");
+                        Print(L"cluster -> %d\n", cluster);
+                        Print(L"fileSize -> %d\n", fat32EntryData[i].fileSize);
+                        if ((fat32EntryData[i].name[0] == 'K') &&
+                            (fat32EntryData[i].name[1] == 'E') &&
+                            (fat32EntryData[i].name[2] == 'R') &&
+                            (fat32EntryData[i].name[3] == 'N') &&
+                            (fat32EntryData[i].name[4] == 'E') &&
+                            (fat32EntryData[i].name[5] == 'L')) {
+                            Print(L"Kernel find!!!");
+                            for (INT8 k = 0;; ++k) {
+                                UINT32 *fat = (UINT32 *)Malloc(BS, 512);
+                                uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, fatLBA + cluster / 512, sizeof(UINT32) * 128, (VOID *)fat);
+                                CHAR8 *buffer = (CHAR8 *)Malloc(BS, 512);
+                                uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA + cluster - fat32Data->rootEntryClusPos, sizeof(CHAR8) * 512, (VOID *)buffer);
+                                for (INT16 m = 0; m < 512; ++m) {
+                                    Print(L"%c", buffer[m]);
+                                }
+                                if (fat[cluster] >= 0x0FFFFFF8) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
+    Free(BS, fat32Data);
 }
 
 EFI_STATUS
