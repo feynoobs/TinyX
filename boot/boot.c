@@ -73,6 +73,7 @@ LoadKernel(EFI_BOOT_SERVICES *BS, EFI_BLOCK_IO *block)
         Print(L"Fat32 Dump...\n");
         Print(L"bytesPerSector -> %u\n", fat32Data->bytesPerSector);
         Print(L"sectorsPerCluster -> %u\n", fat32Data->sectorsPerCluster);
+        Print(L"sectorPerTruck -> %u\n", fat32Data->sectorPerTruck);
         Print(L"reserveSectors -> %u\n", fat32Data->reserveSectors);
         Print(L"numFats -> %u\n", fat32Data->numFats);
         Print(L"totalSector32 -> %u\n", fat32Data->totalSector32);
@@ -80,6 +81,7 @@ LoadKernel(EFI_BOOT_SERVICES *BS, EFI_BLOCK_IO *block)
         Print(L"fsinfoEntrySector -> %u\n", fat32Data->fsinfoEntrySector);
         Print(L"backupBootSector -> %u\n", fat32Data->backupBootSector);
         Print(L"signature  -> %04X\n", fat32Data->signature);
+        for (;;) ;
 
         UINTN rootLBA = fat32Data->fatSize32 * fat32Data->numFats + fat32Data->reserveSectors;
         UINTN fatLBA = fat32Data->reserveSectors;
@@ -104,12 +106,15 @@ LoadKernel(EFI_BOOT_SERVICES *BS, EFI_BLOCK_IO *block)
                             (fat32EntryData[i].name[3] == 'N') &&
                             (fat32EntryData[i].name[4] == 'E') &&
                             (fat32EntryData[i].name[5] == 'L')) {
-                            Print(L"Kernel find!!!");
                             for (INT8 k = 0;; ++k) {
+                                Print(L"Goggo\n");
                                 UINT32 *fat = (UINT32 *)Malloc(BS, 512);
-                                uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, fatLBA + cluster / 512, sizeof(UINT32) * 128, (VOID *)fat);
+                                uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, fatLBA + cluster / 128, sizeof(UINT32) * 128, (VOID *)fat);
                                 CHAR8 *buffer = (CHAR8 *)Malloc(BS, 512);
-                                uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA + cluster - fat32Data->rootEntryClusPos, sizeof(CHAR8) * 512, (VOID *)buffer);
+                                status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA + (cluster - fat32Data->rootEntryClusPos) * fat32Data->sectorsPerCluster, sizeof(CHAR8) * 512, (VOID *)buffer);
+                                Print(L"%d\n", rootLBA);
+                                Print(L"%d\n", fat32Data->rootEntryClusPos);
+                                Print(L"%X\n", (rootLBA + cluster - fat32Data->rootEntryClusPos) * 512);
                                 for (INT16 m = 0; m < 512; ++m) {
                                     Print(L"%c", buffer[m]);
                                 }
