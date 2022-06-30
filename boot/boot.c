@@ -17,6 +17,13 @@ Malloc(EFI_BOOT_SERVICES *BS, UINT64 length)
     return memory;
 }
 
+/**
+ * @brief メモリを開放します
+ *
+ * @param BS ブートサービス
+ * @param memory Mallocで確保した開放するメモリ
+ * @return VOID
+ */
 static VOID
 Free(EFI_BOOT_SERVICES *BS, VOID *memory)
 {
@@ -118,7 +125,8 @@ LoadKernel(EFI_BOOT_SERVICES *BS, EFI_BLOCK_IO *block)
                                 for (INT16 m = 0; m < 512; ++m) {
                                     Print(L"%c", buffer[m]);
                                 }
-                                if (fat[cluster] >= 0x0FFFFFF8) {
+                                cluster = fat[cluster];
+                                if (cluster >= 0x0FFFFFF8) {
                                     break;
                                 }
                             }
