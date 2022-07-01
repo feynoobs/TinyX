@@ -3,8 +3,15 @@
 
 #include "file/fat32.h"
 
+/**
+ * @brief ヒープからメモリを取得します
+ *
+ * @param BS ブートサービス
+ * @param length 確保するメモリのサイズ
+ * @return VOID*
+ */
 static VOID *
-Malloc(EFI_BOOT_SERVICES *BS, UINT64 length)
+Malloc(const EFI_BOOT_SERVICES *BS, const UINT64 length)
 {
     VOID *memory;
     EFI_STATUS status;
@@ -18,16 +25,38 @@ Malloc(EFI_BOOT_SERVICES *BS, UINT64 length)
 }
 
 /**
- * @brief メモリを開放します
+ * @brief ヒープのメモリを開放します
  *
  * @param BS ブートサービス
  * @param memory Mallocで確保した開放するメモリ
  * @return VOID
  */
 static VOID
-Free(EFI_BOOT_SERVICES *BS, VOID *memory)
+Free(const EFI_BOOT_SERVICES *BS, const VOID *memory)
 {
     uefi_call_wrapper(BS->FreePool, 1, memory);
+}
+
+/**
+ * @brief メモリをコピーする
+ *
+ * @param dst 入力先
+ * @param src 入力元
+ * @param length コピーするメモリの長さ
+ * @return VOID
+ */
+static VOID
+Memcpy(VOID *dst, const VOID *src, UINTN length)
+{
+    UINT8 *p1 = (UINT8 *)dst;
+    const UINT8 *p2 = (UINT8 *)src;
+
+    while (length > 0) {
+        --length;
+        *p1 = *p2;
+        --p1;
+        --p2;
+    }
 }
 
 static INTN
@@ -43,9 +72,23 @@ Memcmp(const VOID *s1, const VOID *s2, UINTN length)
         if (ret != 0) {
             break;
         }
+        --p1;
+        --p2;
     }
 
     return ret;
+}
+
+static VOID *
+Realloc(const EFI_BOOT_SERVICES *BS, const VOID *old, const UINT64 oldLength, const UINT64 newLength)
+{
+    VOID *new = Malloc(BS, newLength);
+    if (old != NULL) {
+        Memcpy(new, old, oldLength);
+        Free(BS, old);
+    }
+
+    return new;
 }
 
 static BOOLEAN
@@ -88,7 +131,6 @@ LoadKernel(EFI_BOOT_SERVICES *BS, EFI_BLOCK_IO *block)
         Print(L"fsinfoEntrySector -> %u\n", fat32Data->fsinfoEntrySector);
         Print(L"backupBootSector -> %u\n", fat32Data->backupBootSector);
         Print(L"signature  -> %04X\n", fat32Data->signature);
-        for (;;) ;
 
         UINTN rootLBA = fat32Data->fatSize32 * fat32Data->numFats + fat32Data->reserveSectors;
         UINTN fatLBA = fat32Data->reserveSectors;
@@ -113,22 +155,29 @@ LoadKernel(EFI_BOOT_SERVICES *BS, EFI_BLOCK_IO *block)
                             (fat32EntryData[i].name[3] == 'N') &&
                             (fat32EntryData[i].name[4] == 'E') &&
                             (fat32EntryData[i].name[5] == 'L')) {
-                            for (INT8 k = 0;; ++k) {
-                                Print(L"Goggo\n");
-                                UINT32 *fat = (UINT32 *)Malloc(BS, 512);
-                                uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, fatLBA + cluster / 128, sizeof(UINT32) * 128, (VOID *)fat);
-                                CHAR8 *buffer = (CHAR8 *)Malloc(BS, 512);
-                                status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA + (cluster - fat32Data->rootEntryClusPos) * fat32Data->sectorsPerCluster, sizeof(CHAR8) * 512, (VOID *)buffer);
-                                Print(L"%d\n", rootLBA);
-                                Print(L"%d\n", fat32Data->rootEntryClusPos);
-                                Print(L"%X\n", (rootLBA + cluster - fat32Data->rootEntryClusPos) * 512);
-                                for (INT16 m = 0; m < 512; ++m) {
-                                    Print(L"%c", buffer[m]);
+                            UINTN allocate = 0;
+                            UINTN size = fat32EntryData[i].fileSize;
+                            const UINT16 ONE = 512 * fat32Data->sectorsPerCluster;
+
+                            for (INT8 k = 0; cluster < 0x0FFFFFF8; ++k) {
+                                UINT16 reader = size;
+                                if (size > ONE) {
+                                    size -= ONE;
+                                    reader = ONE;
+                                    allocate += ONE;
+                                }
+                                else {
+                                    allocate += size;
+                                }
+                                UINT32 fat[128];
+                                UINT8 clusterData[ONE];
+
+                                uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, fatLBA + cluster / 128, 512, (VOID *)fat);
+                                status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA + (cluster - fat32Data->rootEntryClusPos) * fat32Data->sectorsPerCluster, ONE, (VOID *)clusterData);
+                                for (INT16 m = 0; m < reader; ++m) {
+                                    Print(L"%c", clusterData[m]);
                                 }
                                 cluster = fat[cluster];
-                                if (cluster >= 0x0FFFFFF8) {
-                                    break;
-                                }
                             }
                         }
                     }
