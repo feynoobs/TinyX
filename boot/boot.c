@@ -8,7 +8,7 @@
  *
  * @param BS ブートサービス
  * @param length 確保するメモリのサイズ
- * @return VOID*
+ * @return 確保したメモリのポインタ
  */
 static VOID *
 Malloc(const EFI_BOOT_SERVICES *BS, const UINT64 length)
@@ -40,10 +40,9 @@ Free(const EFI_BOOT_SERVICES *BS, const VOID *memory)
 /**
  * @brief メモリをコピーする
  *
- * @param dst 入力先
- * @param src 入力元
- * @param length コピーするメモリの長さ
- * @return VOID
+ * @param[out] dst 入力先
+ * @param[in] src 入力元
+ * @param[in] length コピーするメモリの長さ
  */
 static VOID
 Memcpy(VOID *dst, const VOID *src, UINTN length)
@@ -59,6 +58,15 @@ Memcpy(VOID *dst, const VOID *src, UINTN length)
     }
 }
 
+/**
+ * @brief 2つのメモリを比較する
+ *
+ * @param[in] s1 比較対象1
+ * @param[in] s2 比較対象2
+ * @param[in] length 長さ
+ * @retval 0 同一内容
+ * @retval 0以外 異なる内容
+ */
 static INTN
 Memcmp(const VOID *s1, const VOID *s2, UINTN length)
 {
@@ -79,20 +87,16 @@ Memcmp(const VOID *s1, const VOID *s2, UINTN length)
     return ret;
 }
 
-static VOID *
-Realloc(const EFI_BOOT_SERVICES *BS, const VOID *old, const UINT64 oldLength, const UINT64 newLength)
-{
-    VOID *new = Malloc(BS, newLength);
-    if (old != NULL) {
-        Memcpy(new, old, oldLength);
-        Free(BS, old);
-    }
-
-    return new;
-}
-
+/**
+ * @brief 2つのデバイスノードが一致しているか
+ *
+ * @param imgPath 1つ目のデバイスノード
+ * @param devPath 2つ目のデバイスノード
+ * @retval TRUE ノードが一致
+ * @retval FALSE ノードが不一致
+ */
 static BOOLEAN
-IsNodeMatch(EFI_DEVICE_PATH *imgPath, EFI_DEVICE_PATH *devPath)
+IsNodeMatch(const EFI_DEVICE_PATH *imgPath, const EFI_DEVICE_PATH *devPath)
 {
     BOOLEAN match = FALSE;
     UINTN length = DevicePathNodeLength(imgPath);
@@ -110,8 +114,30 @@ IsNodeMatch(EFI_DEVICE_PATH *imgPath, EFI_DEVICE_PATH *devPath)
     return match;
 }
 
+static fat32entry *
+FindKernelFileInRootDirectory(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *fat32Data)
+{
+    EFI_STATUS status;
+
+    BOOLEAN match = FALSE;
+    fat32entry fat32EntryData[16];
+    UINTN rootLBA = fat32Data->fatSize32 * fat32Data->numFats + fat32Data->reserveSectors;
+    status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA, sizeof(fat32EntryData), (VOID *)fat32EntryData);
+    if (status == EFI_SUCCESS) {
+        for (INT8 i = 0; i < 16; ++i) {
+            if (fat32EntryData[i].name[0] != 0x00) {
+                if (fat32EntryData[i].name[0] != 0xE5) {
+                    if (fat32EntryData[i].name[0] != 0x05) {
+                    }
+                }
+            }
+        }
+    }
+
+}
+
 static VOID
-LoadKernel(EFI_BOOT_SERVICES *BS, EFI_BLOCK_IO *block)
+LoadKernel(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block)
 {
     EFI_STATUS status;
 
