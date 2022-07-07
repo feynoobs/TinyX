@@ -115,25 +115,70 @@ IsNodeMatch(const EFI_DEVICE_PATH *imgPath, const EFI_DEVICE_PATH *devPath)
 }
 
 static fat32entry *
-FindKernelFileInRootDirectory(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *fat32Data)
+ReadDir(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *fat32Data, const UINTN cluster, UINTN *files)
 {
     EFI_STATUS status;
+    const UINTN entries = fat32Data->bytesPerSector * fat32Data->sectorsPerCluster / sizeof(fat32entry);
+    const fat32entry fat32EntryData[entries];
+    const UINTN rootLBA = fat32Data->fatSize32 * fat32Data->numFats + fat32Data->reserveSectors;
+    const UINTN fatLBA = fat32Data->reserveSectors;
+    fat32entry *datas;
 
-    BOOLEAN match = FALSE;
-    fat32entry fat32EntryData[16];
-    UINTN rootLBA = fat32Data->fatSize32 * fat32Data->numFats + fat32Data->reserveSectors;
-    status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA, sizeof(fat32EntryData), (VOID *)fat32EntryData);
-    if (status == EFI_SUCCESS) {
-        for (INT8 i = 0; i < 16; ++i) {
-            if (fat32EntryData[i].name[0] != 0x00) {
-                if (fat32EntryData[i].name[0] != 0xE5) {
-                    if (fat32EntryData[i].name[0] != 0x05) {
+    *files = 0;
+    for (UINTN tmpCluster = cluster; tmpCluster < 0x0FFFFFF8;) {
+        const UINTN relaticeLBA = tmpCluster * fat32Data->sectorsPerCluster;
+        const UINTN relativeFatLBA = tmpCluster / 128;
+        const UINT32 fatEntry[128];
+        status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA + relaticeLBA, sizeof(fat32EntryData), (VOID *)fat32EntryData);
+        if (status == EFI_SUCCESS) {
+            for (UINTN i = 0; i < entries; ++i) {
+                if (fat32EntryData[i].name[0] != 0x00) {
+                    if (fat32EntryData[i].name[0] != 0xE5) {
+                        if (fat32EntryData[i].name[0] != 0x05) {
+                            if (fat32EntryData[i].attr != 0x0F) {
+                                ++(*files);
+                            }
+                        }
                     }
+                }
+            }
+            status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, fatLBA + relativeFatLBA, sizeof(fatEntry), (VOID *)fatEntry);
+            if (status == EFI_SUCCESS) {
+                tmpCluster = fatEntry[tmpCluster % 128];
+            }
+        }
+    }
+
+    if (*files > 0) {
+        UINTN cursor = 0;
+        datas = Malloc(BS, *files * sizeof(fat32entry));
+        for (UINTN tmpCluster = cluster; tmpCluster < 0x0FFFFFF8;) {
+            const UINTN relaticeLBA = tmpCluster * fat32Data->sectorsPerCluster;
+            const UINTN relativeFatLBA = tmpCluster / 128;
+            const UINT32 fatEntry[128];
+            status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA + relaticeLBA, sizeof(fat32EntryData), (VOID *)fat32EntryData);
+            if (status == EFI_SUCCESS) {
+                for (UINTN i = 0; i < entries; ++i) {
+                    if (fat32EntryData[i].name[0] != 0x00) {
+                        if (fat32EntryData[i].name[0] != 0xE5) {
+                            if (fat32EntryData[i].name[0] != 0x05) {
+                                if (fat32EntryData[i].attr != 0x0F) {
+                                    Memcpy(&datas[cursor], &fat32EntryData[i], sizeof(fat32entry));
+                                    ++cursor;
+                                }
+                            }
+                        }
+                    }
+                }
+                status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, fatLBA + relativeFatLBA, sizeof(fatEntry), (VOID *)fatEntry);
+                if (status == EFI_SUCCESS) {
+                    tmpCluster = fatEntry[tmpCluster % 128];
                 }
             }
         }
     }
 
+    return datas;
 }
 
 static VOID
