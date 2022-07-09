@@ -114,6 +114,16 @@ IsNodeMatch(const EFI_DEVICE_PATH *imgPath, const EFI_DEVICE_PATH *devPath)
     return match;
 }
 
+/**
+ * @brief 指定されたクラスタのファイル一覧を取得する
+ *
+ * @param[in] BS ブートサービス
+ * @param[in] block ブロックIO
+ * @param[in] fat32Data fat32の構造体
+ * @param cluster ディレクトリのある先頭クラスタ
+ * @param[out] files 読んだファイル数
+ * @return fat32entry* ファイルリスト
+ */
 static fat32entry *
 ReadDir(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *fat32Data, const UINTN cluster, UINTN *files)
 {
@@ -122,11 +132,11 @@ ReadDir(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *fat
     const fat32entry fat32EntryData[entries];
     const UINTN rootLBA = fat32Data->fatSize32 * fat32Data->numFats + fat32Data->reserveSectors;
     const UINTN fatLBA = fat32Data->reserveSectors;
-    fat32entry *datas;
+    fat32entry *datas = NULL;
 
     *files = 0;
     for (UINTN tmpCluster = cluster; tmpCluster < 0x0FFFFFF8;) {
-        const UINTN relaticeLBA = tmpCluster * fat32Data->sectorsPerCluster;
+        const UINTN relaticeLBA = (tmpCluster - fat32Data->rootEntryClusPos) * fat32Data->sectorsPerCluster;
         const UINTN relativeFatLBA = tmpCluster / 128;
         const UINT32 fatEntry[128];
         status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA + relaticeLBA, sizeof(fat32EntryData), (VOID *)fat32EntryData);
@@ -135,25 +145,28 @@ ReadDir(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *fat
                 if (fat32EntryData[i].name[0] != 0x00) {
                     if (fat32EntryData[i].name[0] != 0xE5) {
                         if (fat32EntryData[i].name[0] != 0x05) {
-                            if (fat32EntryData[i].attr != 0x0F) {
+                            // if (fat32EntryData[i].attr != 0x0F) {
                                 ++(*files);
-                            }
+                            // }
                         }
                     }
                 }
             }
             status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, fatLBA + relativeFatLBA, sizeof(fatEntry), (VOID *)fatEntry);
             if (status == EFI_SUCCESS) {
+                Print(L"current -> %X\n", tmpCluster);
                 tmpCluster = fatEntry[tmpCluster % 128];
+                Print(L"next -> %X\n", tmpCluster);
             }
         }
     }
+    Print(L"files -> %X\n", *files);
 
     if (*files > 0) {
         UINTN cursor = 0;
         datas = Malloc(BS, *files * sizeof(fat32entry));
         for (UINTN tmpCluster = cluster; tmpCluster < 0x0FFFFFF8;) {
-            const UINTN relaticeLBA = tmpCluster * fat32Data->sectorsPerCluster;
+            const UINTN relaticeLBA = (tmpCluster - fat32Data->rootEntryClusPos) * fat32Data->sectorsPerCluster;
             const UINTN relativeFatLBA = tmpCluster / 128;
             const UINT32 fatEntry[128];
             status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA + relaticeLBA, sizeof(fat32EntryData), (VOID *)fat32EntryData);
@@ -162,10 +175,10 @@ ReadDir(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *fat
                     if (fat32EntryData[i].name[0] != 0x00) {
                         if (fat32EntryData[i].name[0] != 0xE5) {
                             if (fat32EntryData[i].name[0] != 0x05) {
-                                if (fat32EntryData[i].attr != 0x0F) {
+                                // if (fat32EntryData[i].attr != 0x0F) {
                                     Memcpy(&datas[cursor], &fat32EntryData[i], sizeof(fat32entry));
                                     ++cursor;
-                                }
+                                // }
                             }
                         }
                     }
@@ -188,11 +201,22 @@ LoadKernel(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block)
 
     Print(L"block size:%d\n", block->Media->BlockSize);
 
-    fat32 *fat32Data = (fat32 *)Malloc(BS, sizeof(fat32));
-    status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, 0, sizeof(fat32), (VOID *)fat32Data);
+    fat32 fat32Data;
+    status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, 0, sizeof(fat32), (VOID *)&fat32Data);
     if (status == EFI_SUCCESS) {
+        Print(L"rootEntryClusPos -> %u\n", fat32Data.rootEntryClusPos);
+        UINTN files;
+        fat32entry *fileEntry = ReadDir(BS, block, &fat32Data, fat32Data.rootEntryClusPos, &files);
+        Print(L"files2 -> %X\n", files);
+        for (INT16 i = 0; i < files; ++i) {
+            for (CHAR8 j = 0; j < sizeof(fileEntry[i].name); ++j) {
+                Print(L"%c", fileEntry[i].name[j]);
+            }
+            Print(L"\n");
+        }
         Print(L"Fat32 Dump...\n");
-        Print(L"bytesPerSector -> %u\n", fat32Data->bytesPerSector);
+        /*
+        Print(L"bytesPerSector -> %u\n", fat32Data.bytesPerSector);
         Print(L"sectorsPerCluster -> %u\n", fat32Data->sectorsPerCluster);
         Print(L"sectorPerTruck -> %u\n", fat32Data->sectorPerTruck);
         Print(L"reserveSectors -> %u\n", fat32Data->reserveSectors);
@@ -255,10 +279,17 @@ LoadKernel(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block)
                 }
             }
         }
+        */
     }
-    Free(BS, fat32Data);
 }
 
+/**
+ * @brief UEFI エントリー
+ *
+ * @param image このプログラムのハンドル
+ * @param table システムテーブル
+ * @return EFI_STATUS 戻り値
+ */
 EFI_STATUS
 efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
 {
