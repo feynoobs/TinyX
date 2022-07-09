@@ -114,27 +114,16 @@ IsNodeMatch(const EFI_DEVICE_PATH *imgPath, const EFI_DEVICE_PATH *devPath)
     return match;
 }
 
-/**
- * @brief 指定されたクラスタのファイル一覧を取得する
- *
- * @param[in] BS ブートサービス
- * @param[in] block ブロックIO
- * @param[in] fat32Data fat32の構造体
- * @param cluster ディレクトリのある先頭クラスタ
- * @param[out] files 読んだファイル数
- * @return fat32entry* ファイルリスト
- */
-static fat32entry *
-ReadDir(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *fat32Data, const UINTN cluster, UINTN *files)
+static VOID
+ReadDirSub(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *fat32Data, const UINTN cluster, UINTN *files, fat32entry *datas)
 {
     EFI_STATUS status;
     const UINTN entries = fat32Data->bytesPerSector * fat32Data->sectorsPerCluster / sizeof(fat32entry);
     const fat32entry fat32EntryData[entries];
     const UINTN rootLBA = fat32Data->fatSize32 * fat32Data->numFats + fat32Data->reserveSectors;
     const UINTN fatLBA = fat32Data->reserveSectors;
-    fat32entry *datas = NULL;
+    UINTN cursor = 0;
 
-    *files = 0;
     for (UINTN tmpCluster = cluster; tmpCluster < 0x0FFFFFF8;) {
         const UINTN relaticeLBA = (tmpCluster - fat32Data->rootEntryClusPos) * fat32Data->sectorsPerCluster;
         const UINTN relativeFatLBA = tmpCluster / 128;
@@ -145,9 +134,10 @@ ReadDir(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *fat
                 if (fat32EntryData[i].name[0] != 0x00) {
                     if (fat32EntryData[i].name[0] != 0xE5) {
                         if (fat32EntryData[i].name[0] != 0x05) {
-                            // if (fat32EntryData[i].attr != 0x0F) {
-                                ++(*files);
-                            // }
+                            if (datas != NULL) {
+                                Memcpy(&datas[cursor], &fat32EntryData[i], sizeof(fat32entry));
+                            }
+                            ++cursor;
                         }
                     }
                 }
@@ -160,35 +150,30 @@ ReadDir(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *fat
             }
         }
     }
-    Print(L"files -> %X\n", *files);
+    *files = cursor;
 
-    if (*files > 0) {
-        UINTN cursor = 0;
-        datas = Malloc(BS, *files * sizeof(fat32entry));
-        for (UINTN tmpCluster = cluster; tmpCluster < 0x0FFFFFF8;) {
-            const UINTN relaticeLBA = (tmpCluster - fat32Data->rootEntryClusPos) * fat32Data->sectorsPerCluster;
-            const UINTN relativeFatLBA = tmpCluster / 128;
-            const UINT32 fatEntry[128];
-            status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA + relaticeLBA, sizeof(fat32EntryData), (VOID *)fat32EntryData);
-            if (status == EFI_SUCCESS) {
-                for (UINTN i = 0; i < entries; ++i) {
-                    if (fat32EntryData[i].name[0] != 0x00) {
-                        if (fat32EntryData[i].name[0] != 0xE5) {
-                            if (fat32EntryData[i].name[0] != 0x05) {
-                                // if (fat32EntryData[i].attr != 0x0F) {
-                                    Memcpy(&datas[cursor], &fat32EntryData[i], sizeof(fat32entry));
-                                    ++cursor;
-                                // }
-                            }
-                        }
-                    }
-                }
-                status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, fatLBA + relativeFatLBA, sizeof(fatEntry), (VOID *)fatEntry);
-                if (status == EFI_SUCCESS) {
-                    tmpCluster = fatEntry[tmpCluster % 128];
-                }
-            }
-        }
+    return datas;
+}
+
+/**
+ * @brief 指定されたクラスタのファイル一覧を取得する
+ *
+ * @param[in] BS ブートサービス
+ * @param[in] block ブロックIO
+ * @param[in] fat32Data fat32の構造体
+ * @param cluster ディレクトリのある先頭クラスタ
+ * @param[out] files 読んだファイル数
+ * @return fat32entry* ファイルリスト
+ */
+static fat32entry*
+ReadDir(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *fat32Data, const UINTN cluster, UINTN *files)
+{
+    fat32entry* datas = NULL;
+    *files = 0;
+    ReadDirSub(BS, block, fat32Data, cluster, files, NULL);
+    if (*files != 0) {
+        datas = Malloc(BS, sizeof(fat32entry) * (*files));
+        ReadDirSub(BS, block, fat32Data, cluster, files, datas);
     }
 
     return datas;
