@@ -113,6 +113,16 @@ IsNodeMatch(const EFI_DEVICE_PATH *imgPath, const EFI_DEVICE_PATH *devPath)
     return match;
 }
 
+/**
+ * @brief
+ *
+ * @param[in] BS ブートサービス
+ * @param[in] block ブロックIO
+ * @param[in] fat32Data fat32の構造体
+ * @param[in] cluster ディレクトリのある先頭クラスタ
+ * @param[out] files 読んだファイル数
+ * @param[out] datas 各ファイルのFAT情報
+ */
 static VOID
 ReadDirSub(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *fat32Data, const UINTN cluster, UINTN *files, fat32entry *datas)
 {
@@ -160,7 +170,7 @@ ReadDirSub(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *
  * @param[in] BS ブートサービス
  * @param[in] block ブロックIO
  * @param[in] fat32Data fat32の構造体
- * @param cluster ディレクトリのある先頭クラスタ
+ * @param[in] cluster ディレクトリのある先頭クラスタ
  * @param[out] files 読んだファイル数
  * @return ファイルリストのポインタ
  */
