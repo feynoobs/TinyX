@@ -29,7 +29,6 @@ Malloc(const EFI_BOOT_SERVICES *BS, const UINT64 length)
  *
  * @param BS ブートサービス
  * @param memory Mallocで確保した開放するメモリ
- * @return VOID
  */
 static VOID
 Free(const EFI_BOOT_SERVICES *BS, const VOID *memory)
@@ -163,7 +162,7 @@ ReadDirSub(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *
  * @param[in] fat32Data fat32の構造体
  * @param cluster ディレクトリのある先頭クラスタ
  * @param[out] files 読んだファイル数
- * @return fat32entry* ファイルリスト
+ * @return ファイルリストのポインタ
  */
 static fat32entry*
 ReadDir(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *fat32Data, const UINTN cluster, UINTN *files)
@@ -271,9 +270,9 @@ LoadKernel(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block)
 /**
  * @brief UEFI エントリー
  *
- * @param image このプログラムのハンドル
- * @param table システムテーブル
- * @return EFI_STATUS 戻り値
+ * @param[in] image このプログラムのハンドル
+ * @param[in] table システムテーブル
+ * @return EFI_STATUS
  */
 EFI_STATUS
 efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
