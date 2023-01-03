@@ -1,8 +1,23 @@
+/**
+ * @file mbr.h
+ * @author feynoobs (feynoobs@fssoft.co.jp)
+ * @brief マスターブートレコードの定義
+ * @version 0.1
+ * @date 2023-01-03
+ *
+ * @copyright Copyleft (i) 199X all wrongs reversed
+ *
+ */
+
 #ifndef __MBR__H__
 #define __MBR__H__
 
 #include <stdint.h>
 
+/**
+ * @brief 論理パーティション
+ *
+ */
 typedef struct _partition
 {
     uint8_t status;
