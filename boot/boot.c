@@ -198,6 +198,14 @@ ReadDir(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *fat
     return datas;
 }
 
+
+/**
+ * @brief カーネルをロードする(予定)
+ *
+ * @param[in] BS ブートサービス
+ * @param[in] block ブロックIO
+ * @note この関数からカーネルを実行するため戻ってこない
+ */
 static VOID
 LoadKernel(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block)
 {

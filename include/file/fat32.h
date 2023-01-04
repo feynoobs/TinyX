@@ -1,20 +1,35 @@
+/**
+ * @file fat32.h
+ * @author feynoobs (feynoobs@fssoft.co.jp)
+ * @brief Fat32の定義
+ * @version 0.1
+ * @date 2023-01-03
+ * @since 0.1
+ * @see https://en.wikipedia.org/wiki/File_Allocation_Table
+ * @see http://resove.cool.coocan.jp/fatKnowledge/fatStructure.html
+ * @bug FAT32のわかりやすい日本語ドキュメントないかなあ…
+ *
+ * @copyright Copyleft 🄯 199X feynoobs All Wrongs Reversed.
+ *
+ */
+
 #ifndef __FAT32__H__
 #define __FAT32__H__
 
 #include <stdint.h>
 
 /**
- * @brief
+ * @brief FAT32ブートセクタ
  *
  */
 typedef struct _fat32
 {
-    uint8_t jumCode[3];
-    uint8_t oemName[8];
-    uint16_t bytesPerSector;
-    uint8_t sectorsPerCluster;
-    uint16_t reserveSectors;
-    uint8_t numFats;
+    uint8_t jumCode[3];         /**< ジャンプコード @note 使われる? */
+    uint8_t oemName[8];         /**< OMW名 */
+    uint16_t bytesPerSector;    /**< 1セクタあたりのバイト数 @note 多分今どきのPCはすべて512B  */
+    uint8_t sectorsPerCluster;  /**< 1クラスタあたりのセクタ数 */
+    uint16_t reserveSectors;    /**< このテーブルを含む予約セクターの数 */
+    uint8_t numFats;            /**< FATテーブルの個数 */
     uint16_t rootEntryDirs;
     uint16_t totalSector16;
     uint8_t media;
