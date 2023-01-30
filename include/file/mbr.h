@@ -1,13 +1,13 @@
 /**
  * @file mbr.h
- * @author feynoobs (feynoobs@fssoft.co.jp)
+ * @author 真理の御魂最聖麻原彰晃尊師 (sonshi@aum.or.jp)
  * @brief マスターブートレコードの定義
  * @version 0.1
  * @date 2023-01-03
  * @since 0.1
  * @see https://ja.wikipedia.org/wiki/%E3%83%9E%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%96%E3%83%BC%E3%83%88%E3%83%AC%E3%82%B3%E3%83%BC%E3%83%89
  *
- * @copyright Copyleft 🄯 199X feynoobs All Wrongs Reversed.
+ * @copyright Copyleft 🄯 199X 真理の御魂最聖麻原彰晃尊師 All Wrongs Reversed.
  *
  */
 

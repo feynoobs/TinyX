@@ -1,6 +1,6 @@
 /**
  * @file fat32.h
- * @author feynoobs (feynoobs@fssoft.co.jp)
+ * @author 真理の御魂最聖麻原彰晃尊師 (sonshi@aum.or.jp)
  * @brief Fat32の定義
  * @version 0.1
  * @date 2023-01-03
@@ -9,7 +9,7 @@
  * @see http://resove.cool.coocan.jp/fatKnowledge/fatStructure.html
  * @bug FAT32のわかりやすい日本語ドキュメントないかなあ…
  *
- * @copyright Copyleft 🄯 199X feynoobs All Wrongs Reversed.
+ * @copyright Copyleft 🄯 199X 真理の御魂最聖麻原彰晃尊師 All Wrongs Reversed.
  *
  */
 
@@ -30,19 +30,19 @@ typedef struct _fat32
     uint8_t sectorsPerCluster;  /**< 1クラスタあたりのセクタ数 */
     uint16_t reserveSectors;    /**< このテーブルを含む予約セクターの数 */
     uint8_t numFats;            /**< FATテーブルの個数 */
-    uint16_t rootEntryDirs;
-    uint16_t totalSector16;
-    uint8_t media;
-    uint16_t fatSize16;
-    uint16_t sectorPerTruck;
-    uint16_t numHeads;
-    uint32_t hidden;
-    uint32_t totalSector32;
-    uint32_t fatSize32;
-    uint16_t flags;
-    uint16_t version;
-    uint32_t rootEntryClusPos;
-    uint16_t fsinfoEntrySector;
+    uint16_t rootEntryDirs;     /**< @note FAT32では使われないらしい */
+    uint16_t totalSector16;     /**< @note FAT32では使われないらしい */
+    uint8_t media;              /**< 0xF8 */
+    uint16_t fatSize16;         /**< @note FAT32では使われないらしい */
+    uint16_t sectorPerTruck;    /**< @note 使われないらしい */
+    uint16_t numHeads;          /**< @note 使われないらしい */
+    uint32_t hidden;            /**< 0 */
+    uint32_t totalSector32;     /**< ボリュームの総セクタ数 */
+    uint32_t fatSize32;         /**< FATテーブル1個のサイズ */
+    uint16_t flags;             /**< @note あまり基にしなくていい？ */
+    uint16_t version;           /**< バージョン情報 */
+    uint32_t rootEntryClusPos;  /**< rootディレクトリのあるクラスタ */
+    uint16_t fsinfoEntrySector; /**< fsinfo構造体のある場所 */
     uint16_t backupBootSector;
     uint8_t reserve2[12];
     uint8_t drive;
