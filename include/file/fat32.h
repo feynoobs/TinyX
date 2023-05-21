@@ -83,4 +83,21 @@ typedef struct _fat32entry
 
 } __attribute__((packed)) fat32entry;
 
+/**
+ * @brief LFN
+ *
+ */
+typedef struct _lfmEntry
+{
+    uint8_t order;
+    uint8_t name1[10];
+    uint8_t attr;
+    uint8_t type;
+    uint8_t checksum;
+    uint8_t name2[12];
+    uint16_t reserve2;
+    uint8_t name3[4];
+
+} __attribute__((packed)) lfmEntry;
+
 #endif

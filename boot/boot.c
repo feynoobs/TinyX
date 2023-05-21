@@ -152,12 +152,10 @@ ReadDirSub(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const fat32 *
             for (UINTN i = 0; i < entries; ++i) {
                 if (fat32EntryData[i].name[0] != 0x00) {
                     if (fat32EntryData[i].name[0] != 0xE5) {
-                        if (fat32EntryData[i].name[0] != 0x05) {
-                            if (datas != NULL) {
-                                Memcpy(&datas[cursor], &fat32EntryData[i], sizeof(fat32entry));
-                            }
-                            ++cursor;
+                        if (datas != NULL) {
+                            Memcpy(&datas[cursor], &fat32EntryData[i], sizeof(fat32entry));
                         }
+                        ++cursor;
                     }
                 }
             }
