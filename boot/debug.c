@@ -6,15 +6,15 @@
 static void mbPtDump(partition *p)
 {
     puts("=========================================");
-    printf("%20s %02X\n", "status", p->status);
-    printf("%20s %02X\n", "chsStartHead", p->chsStartHead);
-    printf("%20s %02X\n", "chsStartSector", p->chsStartSector);
-    printf("%20s %02X\n", "chsStartCylinder", p->chsStartCylinder);
-    printf("%20s %02X\n", "partitionType", p->partitionType);
-    printf("%20s %02X\n", "chsEndHead", p->chsEndHead);
-    printf("%20s %02X\n", "chsEndSector", p->chsEndSector);
-    printf("%20s %08X\n", "startLBASector", p->startLBASector);
-    printf("%20s %08X\n", "sectors", p->sectors);
+    printf("%-20s %02X\n", "status", p->status);
+    printf("%-20s %02X\n", "chsStartHead", p->chsStartHead);
+    printf("%-20s %02X\n", "chsStartSector", p->chsStartSector);
+    printf("%-20s %02X\n", "chsStartCylinder", p->chsStartCylinder);
+    printf("%-20s %02X\n", "partitionType", p->partitionType);
+    printf("%-20s %02X\n", "chsEndHead", p->chsEndHead);
+    printf("%-20s %02X\n", "chsEndSector", p->chsEndSector);
+    printf("%-20s %08X\n", "startLBASector", p->startLBASector);
+    printf("%-20s %08X\n", "sectors", p->sectors);
 }
 
 int main(int argc, char *argv[])
