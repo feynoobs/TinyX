@@ -1,9 +1,28 @@
+/**
+ * @file gpt.h
+ * @author 真理の御魂最聖麻原彰晃尊師 (sonshi@aum.or.jp)
+ * @brief GPTの定義
+ * @version 0.1
+ * @date 2023-01-03
+ * @since 0.1
+ * @see https://en.wikipedia.org/wiki/File_Allocation_Table
+ * @see http://resove.cool.coocan.jp/fatKnowledge/fatStructure.html
+ * @bug FAT32のわかりやすい日本語ドキュメントないかなあ…
+ *
+ * @copyright Copyleft 🄯 199X 真理の御魂最聖麻原彰晃尊師 All Wrongs Reversed.
+ *
+ */
+
 #ifndef __GPT__H__
 #define __GPT__H__
 
 #include <stdint.h>
 
-typedef struct _gpt
+/**
+ * @brief GPT
+ *
+ */
+typedef struct _GPT
 {
     uint8_t efi[8];
     uint8_t revision[4];
@@ -21,9 +40,13 @@ typedef struct _gpt
     uint32_t partitionArrayCRC32;
     uint8_t reserve2[420];
 
-} __attribute__((packed)) gpt;
+} __attribute__((packed)) GPT;
 
-typedef struct _gptEntry
+/**
+ * @brief GPTのエントリー
+ *
+ */
+typedef struct _GPTENTRY
 {
     uint8_t partitionGUID[16];
     uint8_t uniqueGUID[16];
@@ -32,6 +55,6 @@ typedef struct _gptEntry
     uint64_t flags;
     uint8_t partitionName[72];
 
-} __attribute__((packed)) gptEntry;
+} __attribute__((packed)) GPTENTRY;
 
 #endif

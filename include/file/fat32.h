@@ -22,7 +22,7 @@
  * @brief FAT32ブートセクタ
  *
  */
-typedef struct _fat32
+typedef struct _FAT32
 {
     uint8_t jumCode[3];         /**< ジャンプコード @note 使われる? */
     uint8_t oemName[8];         /**< OMW名 */
@@ -53,9 +53,9 @@ typedef struct _fat32
     uint8_t fileSystemType[8];
     uint8_t bootCode[420];
     uint16_t signature;
-} __attribute__ ((packed)) fat32;
+} __attribute__ ((packed)) FAT32;
 
-typedef struct _fat32fsinfo
+typedef struct _FAT32FSINFO
 {
     uint32_t signature1;
     uint8_t reserved1[480];
@@ -64,9 +64,9 @@ typedef struct _fat32fsinfo
     uint32_t lastAllocateCluster;
     uint8_t reserve2[12];
     uint32_t signature3;
-} __attribute__((packed)) fat32fsinfo;
+} __attribute__((packed)) FAT32FSINFO;
 
-typedef struct _fat32entry
+typedef struct _FAT32ENTRY
 {
     uint8_t name[11];
     uint8_t attr;
@@ -81,13 +81,13 @@ typedef struct _fat32entry
     uint16_t clusterLo;
     uint32_t fileSize;
 
-} __attribute__((packed)) fat32entry;
+} __attribute__((packed)) FAT32ENTRY;
 
 /**
  * @brief LFN
  *
  */
-typedef struct _lfmEntry
+typedef struct _LFMENTRY
 {
     uint8_t order;
     uint8_t name1[10];
@@ -98,6 +98,6 @@ typedef struct _lfmEntry
     uint16_t reserve2;
     uint8_t name3[4];
 
-} __attribute__((packed)) lfmEntry;
+} __attribute__((packed)) LFMENTRY;
 
 #endif

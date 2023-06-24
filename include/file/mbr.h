@@ -20,7 +20,7 @@
  * @brief 論理パーティション
  *
  */
-typedef struct _partition
+typedef struct _PARTITION
 {
     uint8_t status;             /**< ブートフラグ(0x80=ブート可/0x00=ブート不可) */
     uint8_t chsStartHead;       /**< パーティション最初のセクタ(ヘッド) @note おそらく使われない */
@@ -33,7 +33,7 @@ typedef struct _partition
     uint32_t startLBASector;    /**< パーティションの最初のセクタ(LBA) */
     uint32_t sectors;           /**< パーティションのセクタ数(LBA) @note 通常1LBAは512Bなので1パーティションでは512*(2^32)Bが上限になる */
 
-} __attribute__((packed)) partition;
+} __attribute__((packed)) PARTITION;
 
 /**
  * @brief マスターブートレコード
@@ -42,12 +42,12 @@ typedef struct _partition
 typedef struct _mbr
 {
     uint8_t code[446];      /**< ブートストラップローダ */
-    partition partition1;   /**< パーティション1 */
-    partition partition2;   /**< パーティション2 */
-    partition partition3;   /**< パーティション3 */
-    partition partition4;   /**< パーティション4 */
-    uint16_t signature;     /**< シグネチャ(0xAA55) */
+    PARTITION partition1;   /**< パーティション1 */
+    PARTITION partition2;   /**< パーティション2 */
+    PARTITION partition3;   /**< パーティション3 */
+    PARTITION partition4;   /**< パーティション4 */
+    PARTITION signature;     /**< シグネチャ(0xAA55) */
 
-} __attribute__((packed)) mbr;
+} __attribute__((packed)) MBR;
 
 #endif
