@@ -46,7 +46,7 @@ typedef struct _mbr
     PARTITION partition2;   /**< パーティション2 */
     PARTITION partition3;   /**< パーティション3 */
     PARTITION partition4;   /**< パーティション4 */
-    PARTITION signature;     /**< シグネチャ(0xAA55) */
+    uint16_t signature;     /**< シグネチャ(0xAA55) */
 
 } __attribute__((packed)) MBR;
 
