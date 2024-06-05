@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
     fread(&aaa, sizeof(aaa), 1, fp);
     printf("e_ident:");
     for (int i = 0; i < sizeof(aaa.e_ident); ++i) {
-        printf("%02x", aaa.e_ident[i]);
+        printf("%c", aaa.e_ident[i]);
     }
     putchar('\n');
 
@@ -28,11 +28,30 @@ int main(int argc, char *argv[])
     printf("e_shstrndx: %04X\n", aaa.e_shstrndx);
     putchar('\n');
     unsigned char *buf = malloc(8192);
+
+    Elf64_Phdr bbb;
+    fseek(fp, aaa.e_phoff, SEEK_SET);
+    for (int i = 0; i < aaa.e_phnum; ++i) {
+        printf("Program Header %d\n", i);
+        fread(&bbb, sizeof(bbb), 1, fp);
+        printf("p_type:     %08llX\n", bbb.p_type);
+        printf("p_flags:    %08llX\n", bbb.p_flags);
+        printf("p_offset:   %08llX\n", bbb.p_offset);
+        printf("p_vaddr:    %08llX\n", bbb.p_vaddr);
+        printf("p_paddr:    %08llX\n", bbb.p_paddr);
+        printf("p_filesz:   %08llX\n", bbb.p_filesz);
+        printf("p_memsz:    %08llX\n", bbb.p_memsz);
+        printf("p_align:    %08llX\n", bbb.p_align);
+        putchar('\n');
+    }
+
+    /*
     fseek(fp, 0x36ec-0x40, SEEK_SET);
     fread(buf, 8192, 1, fp);
     for (int i = 0; i < 0x11A; ++i) {
         printf("%d:%s\n", i, &buf[i]);
     }
+    */
     // exit(0);
     // fclose(fp);
 
@@ -48,7 +67,7 @@ int main(int argc, char *argv[])
 //     }
 
 // exit(9);
-
+/*
     Elf64_Shdr shdr;
     fseek(fp, aaa.e_shoff, SEEK_SET);
     for (int i = 0; i < aaa.e_shnum; ++i) {
@@ -73,7 +92,7 @@ int main(int argc, char *argv[])
 
         putchar('\n');
     }
-
+*/
 //     fseek(fp, aaa.e_shstrndx, SEEK_SET);
 //     for (int i = 0; i < 60; ++i) {
 //         putchar(fgetc(fp));
@@ -97,7 +116,7 @@ int main(int argc, char *argv[])
         putchar('\n');
     }
 */
-    // fclose(fp);
+    fclose(fp);
 
     return 0;
 }
