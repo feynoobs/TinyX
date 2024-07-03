@@ -27,9 +27,9 @@ int main(int argc, char *argv[])
     printf("e_shnum:    %04X\n", aaa.e_shnum);
     printf("e_shstrndx: %04X\n", aaa.e_shstrndx);
     putchar('\n');
-    unsigned char *buf = malloc(8192);
 
     Elf64_Phdr bbb;
+    char *str;
     fseek(fp, aaa.e_phoff, SEEK_SET);
     for (int i = 0; i < aaa.e_phnum; ++i) {
         printf("Program Header %d\n", i);
@@ -43,6 +43,9 @@ int main(int argc, char *argv[])
         printf("p_memsz:    %08llX\n", bbb.p_memsz);
         printf("p_align:    %08llX\n", bbb.p_align);
         putchar('\n');
+        if (i == aaa.e_shstrndx) {
+            str = bbb.p_paddr;
+        }
     }
 
     /*
@@ -56,7 +59,25 @@ int main(int argc, char *argv[])
     // fclose(fp);
 
     // fp = fopen("a.out", "r");
-    // Elf64_Shdr nm;
+    Elf64_Shdr ccc;
+    fseek(fp, aaa.e_shoff, SEEK_SET);
+    for (int i = 0; i < aaa.e_shnum; ++i) {
+        printf("Section Header %d\n", i);
+        fread(&ccc, sizeof(ccc), 1, fp);
+        printf("%s\n", str[ccc.sh_name]);
+        printf("sh_name:     %08llX\n", ccc.sh_name);
+        printf("sh_type:     %08llX\n", ccc.sh_type);
+        printf("sh_flags:    %08llX\n", ccc.sh_flags);
+        printf("sh_offset:   %08llX\n", ccc.sh_offset);
+        printf("sh_size:     %08llX\n", ccc.sh_size);
+        printf("sh_link:     %08llX\n", ccc.sh_link);
+        printf("sh_info:     %08llX\n", ccc.sh_info);
+        printf("sh_addralign:%08llX\n", ccc.sh_addralign);
+        printf("sh_entsize:  %08llX\n", ccc.sh_entsize);
+        putchar('\n');
+    }
+
+
     // printf("%X\n", aaa.e_shoff + aaa.e_shentsize * (aaa.e_shstrndx - 2));
     // printf("aaa\n");
     // fseek(fp, aaa.e_shoff + aaa.e_shentsize * (aaa.e_shstrndx - 2), SEEK_SET);
