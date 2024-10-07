@@ -8,7 +8,7 @@
 
 void dumpTree(uint64_t origin, FILE *fr, uint32_t *fat, int indent, int pos)
 {
-    fat32entry sect[16];
+    FAT32ENTRY sect[16];
     int next = pos;
     for (int cnt = 0;; ++cnt) {
         if (cnt % 16 == 0) {
@@ -60,16 +60,16 @@ void dumpTree(uint64_t origin, FILE *fr, uint32_t *fat, int indent, int pos)
 
 int main(void)
 {
-    mbr m;
-    gpt g;
+    MBR m;
+    GPT g;
 
-    FILE *fr = fopen("/home/feynoobs/Desktop/hage.bin", "r");
-    fread(&m, sizeof(mbr), 1, fr);
-    fread(&g, sizeof(gpt), 1, fr);
+    FILE *fr = fopen("/home/feynoobs/Desktop/fat32.img", "r");
+    fread(&m, sizeof(MBR), 1, fr);
+    fread(&g, sizeof(GPT), 1, fr);
 
-    printf("mbr = %ld byte\n", sizeof(mbr));
-    printf("gpt = %ld byte\n", sizeof(gpt));
-    printf("gpt entry = %ld byte\n", sizeof(gptEntry));
+    printf("mbr = %ld byte\n", sizeof(MBR));
+    printf("gpt = %ld byte\n", sizeof(GPT));
+    printf("gpt entry = %ld byte\n", sizeof(GPTENTRY));
     putchar('\n');
 
     puts("dump MBR...");
@@ -94,6 +94,29 @@ int main(void)
     printf("partition2[chsEndCylinder]: %02X\n", m.partition2.chsEndCylinder);
     printf("partition2[startLBASector]: %u\n", m.partition2.startLBASector);
     printf("partition2[sectors]: %u\n", m.partition2.sectors);
+    putchar('\n');
+    printf("partition3[status]: %02X\n", m.partition3.status);
+    printf("partition3[chsStartHead]: %02X\n", m.partition3.chsStartHead);
+    printf("partition3[chsStartSector]: %02X\n", m.partition3.chsStartSector);
+    printf("partition3[chsStartCylinder]: %02X\n", m.partition3.chsStartCylinder);
+    printf("partition3[partitionType]: %02X\n", m.partition3.partitionType);
+    printf("partition3[chsEndHead]: %02X\n", m.partition3.chsEndHead);
+    printf("partition3[chsEndSector]: %02X\n", m.partition3.chsEndSector);
+    printf("partition3[chsEndCylinder]: %02X\n", m.partition3.chsEndCylinder);
+    printf("partition3[startLBASector]: %u\n", m.partition3.startLBASector);
+    printf("partition3[sectors]: %u\n", m.partition3.sectors);
+    putchar('\n');
+    printf("partition4[status]: %02X\n", m.partition4.status);
+    printf("partition4[chsStartHead]: %02X\n", m.partition4.chsStartHead);
+    printf("partition4[chsStartSector]: %02X\n", m.partition4.chsStartSector);
+    printf("partition4[chsStartCylinder]: %02X\n", m.partition4.chsStartCylinder);
+    printf("partition4[partitionType]: %02X\n", m.partition4.partitionType);
+    printf("partition4[chsEndHead]: %02X\n", m.partition4.chsEndHead);
+    printf("partition4[chsEndSector]: %02X\n", m.partition4.chsEndSector);
+    printf("partition4[chsEndCylinder]: %02X\n", m.partition4.chsEndCylinder);
+    printf("partition4[startLBASector]: %u\n", m.partition4.startLBASector);
+    printf("partition4[sectors]: %u\n", m.partition4.sectors);
+    putchar('\n');
 
     puts("dump GPT...");
     printf("efi: ");
@@ -123,10 +146,10 @@ int main(void)
     printf("partitionArrayCRC32: %u\n", g.partitionArrayCRC32);
 
     puts("dump GPT Entry...");
-    gptEntry e[128];
+    GPTENTRY e[128];
 
     for (int i = 0; i < g.partitionArrayCnt; ++i) {
-        fread(&e[i], sizeof(gptEntry), 1, fr);
+        fread(&e[i], sizeof(GPTENTRY), 1, fr);
         if (e[i].firstLBA == 0) {
             break;
         }
@@ -152,9 +175,9 @@ int main(void)
         putchar('\n');
     }
     fseek(fr, e[0].firstLBA * 512,SEEK_SET);
-    printf("*** %d ***\n", ftell(fr) / 512);
-    fat32 f;
-    fread(&f, sizeof(fat32), 1, fr);
+    printf("*** %ld ***\n", ftell(fr) / 512);
+    FAT32 f;
+    fread(&f, sizeof(FAT32), 1, fr);
     puts("dump Fat32...");
     printf("jumCode: ");
     for (int i = 0; i < sizeof(f.jumCode); ++i) {
@@ -199,8 +222,8 @@ int main(void)
     putchar('\n');
     printf("signature: %04X\n", f.signature);
 
-    fat32fsinfo fi;
-    fread(&fi, sizeof(fat32fsinfo), 1, fr);
+    FAT32FSINFO fi;
+    fread(&fi, sizeof(FAT32FSINFO), 1, fr);
     puts("dump FSINFO...");
     printf("signature1: %04X\n", fi.signature1);
     printf("signature2: %04X\n", fi.signature2);
