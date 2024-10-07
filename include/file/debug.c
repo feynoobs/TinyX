@@ -221,6 +221,7 @@ int main(void)
     }
     putchar('\n');
     printf("signature: %04X\n", f.signature);
+    putchar('\n');
 
     FAT32FSINFO fi;
     fread(&fi, sizeof(FAT32FSINFO), 1, fr);
@@ -232,6 +233,7 @@ int main(void)
     printf("signature3: %04X\n", fi.signature3);
 // printf("%08X\n", ftell(fr));
 
+    putchar('\n');
     uint32_t *fat = (uint32_t *)malloc(f.fatSize32 * f.bytesPerSector);
     fseek(fr, (f.reserveSectors -2) * f.bytesPerSector, SEEK_CUR);
     printf("%08lX\n", ftell(fr));
