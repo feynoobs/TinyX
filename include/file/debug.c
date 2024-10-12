@@ -83,6 +83,7 @@ int main(void)
     printf("partition1[chsEndCylinder]: %02X\n", m.partition1.chsEndCylinder);
     printf("partition1[startLBASector]: %u\n", m.partition1.startLBASector);
     printf("partition1[sectors]: %u\n", m.partition1.sectors);
+    printf("partition1[total]: %u Gyga Byte\n", m.partition1.sectors * 512 / 1024 / 1024 / 1024);
     putchar('\n');
     printf("partition2[status]: %02X\n", m.partition2.status);
     printf("partition2[chsStartHead]: %02X\n", m.partition2.chsStartHead);
@@ -94,6 +95,7 @@ int main(void)
     printf("partition2[chsEndCylinder]: %02X\n", m.partition2.chsEndCylinder);
     printf("partition2[startLBASector]: %u\n", m.partition2.startLBASector);
     printf("partition2[sectors]: %u\n", m.partition2.sectors);
+    printf("partition2[total]: %u Gyga Byte\n", m.partition2.sectors * 512 / 1024 / 1024);
     putchar('\n');
     printf("partition3[status]: %02X\n", m.partition3.status);
     printf("partition3[chsStartHead]: %02X\n", m.partition3.chsStartHead);
@@ -105,6 +107,7 @@ int main(void)
     printf("partition3[chsEndCylinder]: %02X\n", m.partition3.chsEndCylinder);
     printf("partition3[startLBASector]: %u\n", m.partition3.startLBASector);
     printf("partition3[sectors]: %u\n", m.partition3.sectors);
+    printf("partition3[total]: %u Gyga Byte\n", m.partition3.sectors * 512 / 1024 / 1024);
     putchar('\n');
     printf("partition4[status]: %02X\n", m.partition4.status);
     printf("partition4[chsStartHead]: %02X\n", m.partition4.chsStartHead);
@@ -116,6 +119,7 @@ int main(void)
     printf("partition4[chsEndCylinder]: %02X\n", m.partition4.chsEndCylinder);
     printf("partition4[startLBASector]: %u\n", m.partition4.startLBASector);
     printf("partition4[sectors]: %u\n", m.partition4.sectors);
+    printf("partition4[total]: %u Gyga Byte\n", m.partition4.sectors * 512 / 1024 / 1024);
     putchar('\n');
 
     puts("dump GPT...");
