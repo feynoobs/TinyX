@@ -151,6 +151,7 @@ int main(void)
     printf("onePartitionArraySize: %u\n", g.onePartitionArraySize);
     printf("partitionArrayCRC32: %u\n", g.partitionArrayCRC32);
 
+    putchar('\n');
     puts("dump GPT Entry...");
     GPTENTRY e[128];
 
@@ -180,10 +181,10 @@ int main(void)
         }
         putchar('\n');
     }
-    fseek(fr, e[0].firstLBA * 512,SEEK_SET);
-    printf("*** %ld ***\n", ftell(fr) / 512);
+    fseek(fr, e[0].firstLBA * 512, SEEK_SET);
     FAT32 f;
     fread(&f, sizeof(FAT32), 1, fr);
+    putchar('\n');
     puts("dump Fat32...");
     printf("jumCode: ");
     for (int i = 0; i < sizeof(f.jumCode); ++i) {
@@ -244,6 +245,7 @@ int main(void)
     fseek(fr, (f.reserveSectors -2) * f.bytesPerSector, SEEK_CUR);
     printf("%08lX\n", ftell(fr));
     fread(fat, f.fatSize32 * f.bytesPerSector, 1, fr);
+    putchar('\n');
     puts("dump ROOT...");
     fseek(fr, f.fatSize32 * f.bytesPerSector, SEEK_CUR);
     dumpTree(ftell(fr), fr, fat, 0, 0);
