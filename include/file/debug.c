@@ -6,6 +6,29 @@
 #include "gpt.h"
 #include "fat32.h"
 
+void dumpTreeV2(uint64_t origin)
+{
+
+}
+
+void hexDump(uint64_t target)
+{
+    uint16_t buffer[1024] = {};
+    FILE *fr = fopen("/home/feynoobs/Desktop/fat32.img", "r");
+    fseek(fr, target, SEEK_SET);
+
+    for (uint16_t i = 0; i < sizeof(buffer); ++i) {
+        if ((i % 16) == 0) {
+            putchar('\n');
+        }
+        uint8_t c;
+        fread(&c, 1, 1, fr);
+        printf("%02X ", c);
+    }
+
+    fclose(fr);
+}
+
 void dumpTree(uint64_t origin, FILE *fr, uint32_t *fat, int indent, int pos)
 {
     FAT32ENTRY sect[16];
@@ -241,6 +264,10 @@ int main(void)
 // printf("%08X\n", ftell(fr));
 
     putchar('\n');
+
+// hexDump(2048*512);
+
+    /*
     uint32_t *fat = (uint32_t *)malloc(f.fatSize32 * f.bytesPerSector);
     fseek(fr, (f.reserveSectors -2) * f.bytesPerSector, SEEK_CUR);
     printf("%08lX\n", ftell(fr));
@@ -248,7 +275,9 @@ int main(void)
     putchar('\n');
     puts("dump ROOT...");
     fseek(fr, f.fatSize32 * f.bytesPerSector, SEEK_CUR);
-    dumpTree(ftell(fr), fr, fat, 0, 0);
+*/
+    // hexDump();
+    // dumpTree(ftell(fr), fr, fat, 0, 0);
     // fseek(fr, (f.reserveSectors - 2 + f.fatSize32 * f.numFats) * f.bytesPerSector, SEEK_CUR);
     /*
     for (int i = 0; i < 51 ; ++i) {
