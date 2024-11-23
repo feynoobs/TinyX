@@ -18,6 +18,9 @@
 
 #include <stdint.h>
 
+#define BOC     0x0FFFFFF7      // 不良クラスタ
+#define EOC     0x0FFFFFF8      // クラスタの終端
+
 /**
  * @brief FAT32ブートセクタ
  *

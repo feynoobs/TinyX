@@ -305,6 +305,11 @@ int main(void)
         }
     }
     */
+
+   int dataArea = 0xf70000;
+   fseek(fr, 0xf70000, SEEK_SET);
+
+
     fclose(fr);
 
     return 0;
