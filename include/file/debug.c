@@ -307,8 +307,22 @@ int main(void)
     */
 
    int dataArea = 0xf70000;
-   fseek(fr, 0xf70000, SEEK_SET);
-
+   fseek(fr, 0x104000 + 0x500 * 4, SEEK_SET);
+   for (int i = 0; i < 0x200; ++i) {
+        uint32_t var;
+        fread(&var, sizeof(var), 1, fr);
+        printf("%04d -> %08x\n", i, var);
+   }
+   fseek(fr, 0x104008, SEEK_SET);
+   uint32_t var;
+   for (;;) {
+        fread(&var, sizeof(var), 1, fr);
+        printf("%08x\n", var);
+        if (var >= EOC) {
+            break;
+        }
+       fseek(fr, 0x104000 + var * 4, SEEK_SET);
+   }
 
     fclose(fr);
 
