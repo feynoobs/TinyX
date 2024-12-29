@@ -58,3 +58,5 @@ offset      reserve               fat table
 
 ↓これで完了
 100000 + (32 x 512(=0x4000))  + fatSize32(14768) x 2 x 512 = 00f70000 
+
+test
