@@ -13,7 +13,7 @@ void dumpTreeV2(uint64_t origin)
 
 void hexDump(uint64_t target)
 {
-    uint16_t buffer[1024] = {};
+    uint16_t buffer[1024] = {0};
     FILE *fr = fopen("/home/feynoobs/Desktop/fat32.img", "r");
     fseek(fr, target, SEEK_SET);
 
