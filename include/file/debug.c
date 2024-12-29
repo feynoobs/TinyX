@@ -205,6 +205,9 @@ int main(void)
         putchar('\n');
     }
     fseek(fr, e[0].firstLBA * 512, SEEK_SET);
+    putchar('\n');
+    printf("fat start: %08lx", e[0].firstLBA * 512);
+    putchar('\n');
     FAT32 f;
     fread(&f, sizeof(FAT32), 1, fr);
     putchar('\n');
@@ -230,7 +233,7 @@ int main(void)
     printf("sectorPerTruck: %u\n", f.sectorPerTruck);
     printf("numHeads: %u\n", f.numHeads);
     printf("hidden: %u\n", f.hidden);
-    printf("totalSector32: %u\n", f.totalSector32);
+    printf("fatSize32: %08X\n", f.fatSize32);
     printf("fatSize32: %u\n", f.fatSize32);
     printf("flags: %04X\n", f.flags);
     printf("media: %u\n", f.version);
@@ -251,6 +254,12 @@ int main(void)
     }
     putchar('\n');
     printf("signature: %04X\n", f.signature);
+    putchar('\n');
+
+    // printf("Root Dir = %08x\n", f.reserveSectors  * 512 + f.fatSize32 * f.numFats);
+    // printf("Root Dir = %u\n", f.reserveSectors  * 512 + f.fatSize32 * f.numFats);
+    printf("Root Dir = %08x\n", (f.reserveSectors + f.fatSize32 * f.numFats) * 512);
+    printf("Root Dir = %u\n", (f.reserveSectors + f.fatSize32 * f.numFats) * 512);
     putchar('\n');
 
     FAT32FSINFO fi;
