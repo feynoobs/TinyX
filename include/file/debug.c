@@ -315,18 +315,23 @@ int main(void)
     }
     */
 
-   int dataArea = 0xf70000;
+   int dataArea = 0x100000 + (f.reserveSectors + f.fatSize32 * f.numFats) * 512;
+   /*
    fseek(fr, 0x104000 + 0x500 * 4, SEEK_SET);
    for (int i = 0; i < 0x200; ++i) {
         uint32_t var;
         fread(&var, sizeof(var), 1, fr);
         printf("%04d -> %08x\n", i, var);
    }
+   */
+   // 先頭4バイトx2は無効のでオフセット8
+   // から始める
    fseek(fr, 0x104008, SEEK_SET);
    uint32_t var;
    for (;;) {
         fread(&var, sizeof(var), 1, fr);
         printf("%08x\n", var);
+        printf(">>>%08x\n", 0x104000 + var * 4);
         if (var >= EOC) {
             break;
         }
