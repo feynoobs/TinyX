@@ -81,6 +81,11 @@ void dumpTree(uint64_t origin, FILE *fr, uint32_t *fat, int indent, int pos)
     }
 }
 
+void dumpLFN(uint8_t *fileName, uint32_t *size, uint8_t *type, uint32_t *cluster)
+{
+
+}
+
 int main(void)
 {
     MBR m;
@@ -315,7 +320,31 @@ int main(void)
     }
     */
 
-   int dataArea = 0x100000 + (f.reserveSectors + f.fatSize32 * f.numFats) * 512;
+    uint32_t dataArea = 0x100000 + (f.reserveSectors + f.fatSize32 * f.numFats) * 512;
+    printf("*** %x\n", dataArea);
+    fseek(fr, dataArea, SEEK_SET);
+    for (uint32_t i = 0; i < 12; ++i) {
+        FAT32ENTRY ent;
+        fread(&ent, sizeof(FAT32ENTRY), 1, fr);
+        printf("filename:");
+        for (uint32_t j = 0; j < sizeof(ent.name); ++j) {
+            putchar(ent.name[j]);
+        }
+        putchar('\n');
+        printf("attr:%02x\n", ent.attr);
+        printf("opt:%02x\n", ent.opt);
+        printf("subtime:%d\n", ent.subtime);
+        printf("createdTime:%d\n", ent.createdTime);
+        printf("createdDate:%d\n", ent.createdDate);
+        printf("accessDate:%d\n", ent.accessDate);
+        printf("clusterHi:%04x\n", ent.clusterHi);
+        printf("writedTime:%d\n", ent.writedTime);
+        printf("writedDate:%d\n", ent.writedDate);
+        printf("clusterLo:%04x\n", ent.clusterLo);
+        printf("fileSize:%d\n", ent.fileSize);
+        printf("cluster:%08x\n", ent.clusterHi << 16 | ent.clusterLo);
+        putchar('\n');
+    }
    /*
    fseek(fr, 0x104000 + 0x500 * 4, SEEK_SET);
    for (int i = 0; i < 0x200; ++i) {
