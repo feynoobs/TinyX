@@ -83,8 +83,19 @@ typedef struct _FAT32ENTRY
     uint16_t writedDate;
     uint16_t clusterLo;
     uint32_t fileSize;
-
 } __attribute__((packed)) FAT32ENTRY;
+
+typedef struct _FAT32LFNENTRY
+{
+    uint8_t order;          /** 1から始まるLFNの順序 */
+    uint16_t name1[5];      /** UTF16のファイル名5文字 */
+    uint8_t attr;           /** 属性。 0x0fのはず */
+    uint8_t type;           /** 参考サイトによると0みたい。 @see https://zenn.dev/hidenori3/articles/3ce349c02e79fa */
+    uint8_t checkSum;       /** チェックサム @see https://zenn.dev/hidenori3/articles/3ce349c02e79fa */
+    uint16_t name2[6];      /** UTF16のファイル名6〜11文字 */
+    uint16_t clus;          /** 参考サイトによると0みたい。 @see https://zenn.dev/hidenori3/articles/3ce349c02e79fa */
+    uint16_t name3[2];      /** UTF16のファイル名12〜13文字 */
+} __attribute__((packed)) FAT32LFNENTRY;
 
 /**
  * @brief LFN

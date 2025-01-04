@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "mbr.h"
 #include "gpt.h"
@@ -325,7 +326,17 @@ int main(void)
     fseek(fr, dataArea, SEEK_SET);
     for (uint32_t i = 0; i < 12; ++i) {
         FAT32ENTRY ent;
+
         fread(&ent, sizeof(FAT32ENTRY), 1, fr);
+        // LFN
+        if (ent.attr == 0x0f) {
+            // たぶんLFNが最高20個(最大255文字 / 13文字の切り上げ) + SFNで1個
+            FAT32LFNENTRY lfn[21] = {0};
+            FAT32LFNENTRY now;
+            memcpy(&now, &ent, sizeof(FAT32ENTRY));
+            lfn[now.order - 1] = now;
+        }
+
         printf("filename:");
         for (uint32_t j = 0; j < sizeof(ent.name); ++j) {
             putchar(ent.name[j]);
