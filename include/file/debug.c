@@ -335,6 +335,9 @@ int main(void)
             FAT32LFNENTRY now;
             memcpy(&now, &ent, sizeof(FAT32ENTRY));
             lfn[now.order - 1] = now;
+            for (uint32_t j = 0; j < 21; ++j) {
+
+            }
         }
 
         printf("filename:");
