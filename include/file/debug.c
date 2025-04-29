@@ -386,7 +386,7 @@ int main(int argc, char *argv[])
        fseek(fr, 0x104000 + var * 4, SEEK_SET);
    }
 
-    dumpTree(0xf70000, fr, NULL, 0, 0x104008);
+    // dumpTree(0xf70000, fr, NULL, 0, 0x104008);
 
     fclose(fr);
 
