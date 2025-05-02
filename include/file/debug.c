@@ -7,12 +7,12 @@
 #include "gpt.h"
 #include "fat32.h"
 
-void dumpTreeV2(uint64_t origin)
-{
-
-}
-
-void hexDump(uint64_t target)
+/**
+ * @brief 数値を16進数で表示する
+ * 
+ * @param[in] target ファイルシステム上の位置 
+ */
+static void hexDump(uint64_t target)
 {
     uint16_t buffer[1024] = {0};
     FILE *fr = fopen("/home/feynoobs/Desktop/fat32.img", "r");
@@ -30,7 +30,7 @@ void hexDump(uint64_t target)
     fclose(fr);
 }
 
-void dumpTree(uint64_t origin, FILE *fr, uint32_t *fat, int indent, int pos)
+static void dumpTree(uint64_t origin, FILE *fr, uint32_t *fat, int indent, int pos)
 {
     FAT32ENTRY sect[16];
     int next = pos;
@@ -40,6 +40,7 @@ void dumpTree(uint64_t origin, FILE *fr, uint32_t *fat, int indent, int pos)
                 fseek(fr, origin + next * 512, SEEK_SET);
                 fread(sect, sizeof(sect), 1, fr);
                 next = fat[next];
+                exit(-1);
             }
             else {
                 break;
@@ -73,9 +74,13 @@ void dumpTree(uint64_t origin, FILE *fr, uint32_t *fat, int indent, int pos)
                 }
             }
             if (sect[cnt % 16].attr & 0x10) {
-                if (sect[cnt % 16].name[0] != 0x2E) {
-                    int cur = sect[cnt % 16].clusterHi << 16 | sect[cnt % 16].clusterLo;
-                    dumpTree(origin, fr, fat, indent + 4, cur - 2);
+                if (sect[cnt % 16].attr != 0x0f) {
+                    if (sect[cnt % 16].name[0] != '.') {
+                        int cur = sect[cnt % 16].clusterHi << 16 | sect[cnt % 16].clusterLo;
+                        if (cur != 0) {
+                            dumpTree(origin, fr, fat, indent + 4, cur);
+                        }
+                    }
                 }
             }
         }
@@ -87,7 +92,7 @@ void dumpLFN(uint8_t *fileName, uint32_t *size, uint8_t *type, uint32_t *cluster
 
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
     MBR m;
     GPT g;
@@ -380,6 +385,8 @@ int main(void)
         }
        fseek(fr, 0x104000 + var * 4, SEEK_SET);
    }
+
+    // dumpTree(0xf70000, fr, NULL, 0, 0x104008);
 
     fclose(fr);
 
