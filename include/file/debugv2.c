@@ -28,12 +28,10 @@ static void dumpTree(FILE *fr, uint32_t dir, uint32_t fat, uint32_t cur, uint8_t
                             putchar(sect[i].name[j]);
                         }
                         putchar('\n');
-                        if (attr & 0x10) {
-                            uint32_t child = (sect[i].clusterHi << 16) | sect[i].clusterLo;
-                            if (child != 0 && child < 0x0FFFFFF8) {
-                                if (name0 != '.') {
-                                    dumpTree(fr, dir, fat, child, indent + 4);
-                                }
+                       if (attr & 0x10) {
+                            if (name0 != '.') {
+                                uint32_t child = (sect[i].clusterHi << 16) | sect[i].clusterLo;
+                                dumpTree(fr, dir, fat, child, indent + 4);
                             }
                         }
                     }
@@ -49,7 +47,8 @@ int main(int argc, char *argv[])
 {
     MBR m;
     GPT g;
-    FILE *fr = fopen("/home/feynoobs/Desktop/fat32.img", "rb");
+    // FILE *fr = fopen("/home/feynoobs/Desktop/fat32.img", "rb");
+    FILE *fr = fopen("/dev/sda", "rb");
 
     fread(&m, sizeof(MBR), 1, fr);
     fread(&g, sizeof(GPT), 1, fr);
