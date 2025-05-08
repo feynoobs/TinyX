@@ -101,7 +101,7 @@ typedef struct _FAT32LFNENTRY
  * @brief LFN
  *
  */
-typedef struct _LFMENTRY
+typedef struct _LFNENTRY
 {
     uint8_t order;
     uint8_t name1[10];
@@ -112,6 +112,6 @@ typedef struct _LFMENTRY
     uint16_t reserve2;
     uint8_t name3[4];
 
-} __attribute__((packed)) LFMENTRY;
+} __attribute__((packed)) LFNENTRY;
 
 #endif
