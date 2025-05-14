@@ -7,6 +7,23 @@
 #include "gpt.h"
 #include "fat32.h"
 
+static void dumpFile(FILE *fr, uint32_t dir, uint32_t fat, uint32_t cur, uint8_t indent, uint32_t size)
+{
+    uint8_t pool[32*16*16];
+
+    fseek(fr, dir + (cur - 2) * 512 * 16, SEEK_SET);
+    fread(pool, sizeof(pool), 1, fr);
+
+    printf("size: %u\n", size);
+    for (int i = 0; i < indent; ++i) {
+        putchar(' ');
+    }
+    for (int i = 0; i < 16; ++i) {
+        putchar(pool[i]);
+    }
+    putchar('\n');
+}
+
 static void dumpTree(FILE *fr, uint32_t dir, uint32_t fat, uint32_t cur, uint8_t indent)
 {
     FAT32ENTRY sect[16*16];
@@ -29,9 +46,14 @@ static void dumpTree(FILE *fr, uint32_t dir, uint32_t fat, uint32_t cur, uint8_t
                         }
                         putchar('\n');
                         if (name0 != '.') {
+                            // ディレクトリ
+                            uint32_t child = (sect[i].clusterHi << 16) | sect[i].clusterLo;
                             if (attr & 0x10) {
-                                uint32_t child = (sect[i].clusterHi << 16) | sect[i].clusterLo;
                                 dumpTree(fr, dir, fat, child, indent + 4);
+                            }
+                            // ファイル
+                            else if (attr & 0x20) {
+                                dumpFile(fr, dir, fat, child, indent + 4, sect[i].fileSize);
                             }
                         }
                     }
