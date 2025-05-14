@@ -25,7 +25,7 @@
  * @brief FAT32ブートセクタ
  *
  */
-typedef struct _FAT32
+typedef struct _FAT32BPB
 {
     uint8_t jumCode[3];         /**< ジャンプコード @note 使われる? */
     uint8_t oemName[8];         /**< OMW名 */
@@ -56,7 +56,7 @@ typedef struct _FAT32
     uint8_t fileSystemType[8];
     uint8_t bootCode[420];
     uint16_t signature;
-} __attribute__ ((packed)) FAT32;
+} __attribute__ ((packed)) FAT32BPB;
 
 typedef struct _FAT32FSINFO
 {

@@ -28,8 +28,8 @@ static void dumpTree(FILE *fr, uint32_t dir, uint32_t fat, uint32_t cur, uint8_t
                             putchar(sect[i].name[j]);
                         }
                         putchar('\n');
-                       if (attr & 0x10) {
-                            if (name0 != '.') {
+                        if (name0 != '.') {
+                            if (attr & 0x10) {
                                 uint32_t child = (sect[i].clusterHi << 16) | sect[i].clusterLo;
                                 dumpTree(fr, dir, fat, child, indent + 4);
                             }
@@ -64,8 +64,8 @@ int main(int argc, char *argv[])
     // printf("%d\n", i);
     fseek(fr, e[0].firstLBA * 512, SEEK_SET);
     // exit(-1);
-    FAT32 f;
-    fread(&f, sizeof(FAT32), 1, fr);
+    FAT32BPB f;
+    fread(&f, sizeof(FAT32BPB), 1, fr);
 //     printf("bytesPerSector: %u\n", f.bytesPerSector);
 //     printf("sectorsPerCluster: %u\n", f.sectorsPerCluster);
 // exit(-1);
