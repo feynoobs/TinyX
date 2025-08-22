@@ -30,17 +30,18 @@ static void hexDump(uint64_t target)
     fclose(fr);
 }
 
-static void dumpTree(uint64_t origin, FILE *fr, uint32_t *fat, int indent, int pos)
+static void dumpTree(uint64_t origin, FILE *fr, uint32_t *fat, uint64_t indent, uint64_t pos)
 {
     FAT32ENTRY sect[16];
-    int next = pos;
+    printf("***%lu***\n", sizeof(sect));
+    uint64_t next = pos;
+    printf("***%lu***\n", next);
     for (int cnt = 0;; ++cnt) {
         if (cnt % 16 == 0) {
             if (next < 0x0FFFFFF8) {
                 fseek(fr, origin + next * 512, SEEK_SET);
                 fread(sect, sizeof(sect), 1, fr);
                 next = fat[next];
-                exit(-1);
             }
             else {
                 break;
@@ -219,8 +220,8 @@ int main(int argc, char *argv[])
     putchar('\n');
     printf("fat start: %08lx", e[0].firstLBA * 512);
     putchar('\n');
-    FAT32 f;
-    fread(&f, sizeof(FAT32), 1, fr);
+    FAT32BPB f;
+    fread(&f, sizeof(FAT32BPB), 1, fr);
     putchar('\n');
     puts("dump Fat32...");
     printf("jumCode: ");
@@ -386,7 +387,7 @@ int main(int argc, char *argv[])
        fseek(fr, 0x104000 + var * 4, SEEK_SET);
    }
 
-    // dumpTree(0xf70000, fr, NULL, 0, 0x104008);
+    dumpTree(0xf70000, fr, NULL, 0, 0x104008);
 
     fclose(fr);
 

@@ -69,8 +69,8 @@ int main(int argc, char *argv[])
 {
     MBR m;
     GPT g;
-    // FILE *fr = fopen("/home/feynoobs/Desktop/fat32.img", "rb");
-    FILE *fr = fopen("/dev/sda", "rb");
+    FILE *fr = fopen("/home/feynoobs/Desktop/fat32.img", "rb");
+    // FILE *fr = fopen("/dev/sda", "rb");
 
     fread(&m, sizeof(MBR), 1, fr);
     fread(&g, sizeof(GPT), 1, fr);
@@ -88,6 +88,7 @@ int main(int argc, char *argv[])
     // exit(-1);
     FAT32BPB f;
     fread(&f, sizeof(FAT32BPB), 1, fr);
+    
 //     printf("bytesPerSector: %u\n", f.bytesPerSector);
 //     printf("sectorsPerCluster: %u\n", f.sectorsPerCluster);
 // exit(-1);
