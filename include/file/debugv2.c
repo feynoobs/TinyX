@@ -7,6 +7,17 @@
 #include "gpt.h"
 #include "fat32.h"
 
+typedef struct _FAT32INFO
+{
+    uint32_t bytesPerSector;
+    uint32_t sectorsPerCluster;
+    uint32_t bytesPerCluster;
+    uint32_t fatStart;    // FAT先頭オフセット(byte)
+    uint32_t dataStart;   // データ領域オフセット(byte)
+    uint32_t fatSize;     // FAT1個あたりのサイズ(byte)
+} FAT32INFO;
+
+
 static void dumpFile(FILE *fr, uint32_t dir, uint32_t fat, uint32_t cur, uint8_t indent, uint32_t size)
 {
     uint8_t pool[32*16*16];
@@ -76,8 +87,7 @@ int main(int argc, char *argv[])
     fread(&g, sizeof(GPT), 1, fr);
 
     GPTENTRY e[128];
-    int i;
-    for (i = 0; i < g.partitionArrayCnt; ++i) {
+    for (int i = 0; i < g.partitionArrayCnt; ++i) {
         fread(&e[i], sizeof(GPTENTRY), 1, fr);
         if (e[i].firstLBA == 0) {
             break;
@@ -93,7 +103,14 @@ int main(int argc, char *argv[])
 //     printf("sectorsPerCluster: %u\n", f.sectorsPerCluster);
 // exit(-1);
 
-    dumpTree(fr, 0xf70000, 0x104000, 2, 0); 
+    FAT32INFO info;
+    info.bytesPerSector   = f.bytesPerSector;
+    info.sectorsPerCluster= f.sectorsPerCluster;
+    info.bytesPerCluster  = f.bytesPerSector * f.sectorsPerCluster;
+    info.fatStart         = e[0].firstLBA * 512 + f.reserveSectors * f.bytesPerSector;
+    info.fatSize          = f.fatSize32 * f.bytesPerSector;
+    info.dataStart        = info.fatStart + f.numFats * info.fatSize;
+    dumpTree(fr, &f, 0x104000, 2, 0); 
     fclose(fr);
 
     return 0;
