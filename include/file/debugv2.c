@@ -18,32 +18,30 @@ typedef struct _FAT32INFO
 } FAT32INFO;
 
 
-static void dumpFile(FILE *fr, uint32_t dir, uint32_t fat, uint32_t cur, uint8_t indent, uint32_t size)
+static void dumpFile(FILE *fr, FAT32INFO *info, uint32_t startCluster, uint32_t size, uint8_t indent)
 {
-    uint8_t pool[32*16*16];
+    uint8_t pool[info->bytesPerCluster];
+    uint32_t cur = startCluster;
+    uint32_t remain = size;
 
-    fseek(fr, dir + (cur - 2) * 512 * 16, SEEK_SET);
-    fread(pool, sizeof(pool), 1, fr);
+    while (cur < 0x0FFFFFF8 && remain > 0) {
+        fseek(fr, info->dataStart + (cur - 2) * info->bytesPerCluster, SEEK_SET);
+        fread(buf, info->bytesPerCluster, 1, fr);
 
-    printf("size: %u\n", size);
-    for (int i = 0; i < indent; ++i) {
-        putchar(' ');
     }
-    for (int i = 0; i < 16; ++i) {
-        putchar(pool[i]);
-    }
-    putchar('\n');
+
 }
 
-static void dumpTree(FILE *fr, uint32_t dir, uint32_t fat, uint32_t cur, uint8_t indent)
+static void dumpTree(FILE *fr, FAT32INFO *info, uint32_t startCluster, uint8_t indent)
 {
-    FAT32ENTRY sect[16*16];
+    FAT32ENTRY sect[info->bytesPerCluster / sizeof(FAT32ENTRY)];
 
-    while (cur < 0x0FFFFFF8) {
-        fseek(fr, dir + (cur - 2) * 512 * 16, SEEK_SET);
+    while (startCluster < 0x0FFFFFF8) {
+        fseek(fr, info->dataStart + (startCluster - 2) * info->bytesPerCluster, SEEK_SET);
         fread(sect, sizeof(sect), 1, fr);
 
-        for (int i = 0; i < 16*16; ++i) {
+        int entries = info->bytesPerCluster / sizeof(FAT32ENTRY);
+        for (int i = 0; i < entries; ++i) {
             uint8_t name0 = sect[i].name[0];
             uint8_t attr = sect[i].attr;
             if (name0 != 0x00) {
@@ -60,11 +58,11 @@ static void dumpTree(FILE *fr, uint32_t dir, uint32_t fat, uint32_t cur, uint8_t
                             // ディレクトリ
                             uint32_t child = (sect[i].clusterHi << 16) | sect[i].clusterLo;
                             if (attr & 0x10) {
-                                dumpTree(fr, dir, fat, child, indent + 4);
+                                dumpTree(fr, info, child, indent + 4);
                             }
                             // ファイル
                             else if (attr & 0x20) {
-                                dumpFile(fr, dir, fat, child, indent + 4, sect[i].fileSize);
+                                dumpFile(fr, info, child, sect[i].fileSize, indent + 4);
                             }
                         }
                     }
