@@ -46,16 +46,16 @@ typedef struct _FAT32BPB
     uint16_t version;           /**< バージョン情報 */
     uint32_t rootEntryClusPos;  /**< rootディレクトリのあるクラスタ */
     uint16_t fsinfoEntrySector; /**< fsinfo構造体のある場所 */
-    uint16_t backupBootSector;
-    uint8_t reserve2[12];
-    uint8_t drive;
-    uint8_t reserve3;
-    uint8_t bootSignature;
-    uint32_t volumeId;
-    uint8_t volumeLabel[11];
-    uint8_t fileSystemType[8];
-    uint8_t bootCode[420];
-    uint16_t signature;
+    uint16_t backupBootSector;  /**< ブートセクタのバックアップがあるセクタ */
+    uint8_t reserve2[12];       /**< 予約領域 @note 全部0らしい */
+    uint8_t drive;              /**< 使われてなさそう */
+    uint8_t reserve3;           /**< 0 */
+    uint8_t bootSignature;      /**< ブートシグネチャ 0x29 */
+    uint32_t volumeId;          /**< ボリュームのシリアル番号？ */
+    uint8_t volumeLabel[11];    /**< ボリュームの名前 */
+    uint8_t fileSystemType[8];  /**< ファイルシステムの種類 "FAT32   " */
+    uint8_t bootCode[420];      /**< ブートコード */
+    uint16_t signature;         /**< ブートセクタのシグネチャ 0xAA55 */
 } __attribute__ ((packed)) FAT32BPB;
 
 typedef struct _FAT32FSINFO
@@ -87,14 +87,14 @@ typedef struct _FAT32ENTRY
 
 typedef struct _FAT32LFNENTRY
 {
-    uint8_t order;          /** 1から始まるLFNの順序 */
-    uint16_t name1[5];      /** UTF16のファイル名5文字 */
-    uint8_t attr;           /** 属性。 0x0fのはず */
-    uint8_t type;           /** 参考サイトによると0みたい。 @see https://zenn.dev/hidenori3/articles/3ce349c02e79fa */
-    uint8_t checkSum;       /** チェックサム @see https://zenn.dev/hidenori3/articles/3ce349c02e79fa */
-    uint16_t name2[6];      /** UTF16のファイル名6〜11文字 */
-    uint16_t clus;          /** 参考サイトによると0みたい。 @see https://zenn.dev/hidenori3/articles/3ce349c02e79fa */
-    uint16_t name3[2];      /** UTF16のファイル名12〜13文字 */
+    uint8_t order;          /**< 1から始まるLFNの順序 */
+    uint16_t name1[5];      /**< UTF16のファイル名5文字 */
+    uint8_t attr;           /**< 属性。 0x0fのはず */
+    uint8_t type;           /**< 参考サイトによると0みたい。 @see https://zenn.dev/hidenori3/articles/3ce349c02e79fa */
+    uint8_t checkSum;       /**< チェックサム @see https://zenn.dev/hidenori3/articles/3ce349c02e79fa */
+    uint16_t name2[6];      /**< UTF16のファイル名6〜11文字 */
+    uint16_t clus;          /**< 参考サイトによると0みたい。 @see https://zenn.dev/hidenori3/articles/3ce349c02e79fa */
+    uint16_t name3[2];      /**< UTF16のファイル名12〜13文字 */
 } __attribute__((packed)) FAT32LFNENTRY;
 
 /**
