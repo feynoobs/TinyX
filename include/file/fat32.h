@@ -28,7 +28,7 @@
 typedef struct _FAT32BPB
 {
     uint8_t jumCode[3];         /**< ジャンプコード @note 使われる? */
-    uint8_t oemName[8];         /**< OMW名 */
+    uint8_t oemName[8];         /**< OEM名 */
     uint16_t bytesPerSector;    /**< 1セクタあたりのバイト数 @note 多分今どきのPCはすべて512B  */
     uint8_t sectorsPerCluster;  /**< 1クラスタあたりのセクタ数 */
     uint16_t reserveSectors;    /**< このテーブルを含む予約セクターの数 */
@@ -53,7 +53,7 @@ typedef struct _FAT32BPB
     uint8_t bootSignature;      /**< ブートシグネチャ 0x29 */
     uint32_t volumeId;          /**< ボリュームのシリアル番号？ */
     uint8_t volumeLabel[11];    /**< ボリュームの名前 */
-    uint8_t fileSystemType[8];  /**< ファイルシステムの種類 "FAT32   " */
+    uint8_t fileSystemType[8];  /**< ファイルシステムの種類 "FAT32   " @note 固定文字っぽい */
     uint8_t bootCode[420];      /**< ブートコード */
     uint16_t signature;         /**< ブートセクタのシグネチャ 0xAA55 */
 } __attribute__ ((packed)) FAT32BPB;
