@@ -320,33 +320,35 @@ void tree(GPTENTRY *e, FAT32BPB *f, uint32_t clusPos, uint8_t spaceing)
     uint32_t entryCount = clusterSize / sizeof(FAT32ENTRY);
     FAT32ENTRY entry[entryCount];
 
-    FILE *fEntry = fopen("/home/feynoobs/Desktop/fat32.img", "rb");
-    fseek(fEntry, fatArea + (clusPos - 2) * clusterSize, SEEK_SET);
-    fread(&fatVal, sizeof(uint32_t), 1, fEntry);
-    fatVal &= 0x0FFFFFFF;
-
-    uint32_t clusterAddr = dataArea + (cluster - 2) * clusterSize;
-    uint32_t entriesPerCluster = clusterSize / sizeof(FAT32ENTRY);
     while (cluster < 0x0FFFFFF8) {
+        uint32_t clusterAddr = dataArea + (cluster - 2) * clusterSize;
         FILE *fDir = fopen("/home/feynoobs/Desktop/fat32.img", "rb");
         fseek(fDir, clusterAddr, SEEK_SET);
         fread(entry, clusterSize, 1, fDir);
         fclose(fDir);
         for (int i = 0; i < entryCount; ++i) {
-            printDirInfo(entry[i].name, spaceing + 4);
             if (entry[i].name[0] != 0x00) {
-                if (entry[i].name[0] ！= 0xE5) {
+                if (entry[i].name[0] != 0xE5) {
                     if (entry[i].name[0] != '.') {
                         if (entry[i].attr != 0x0F) {
-                            uint32_t childCluster = (entry[i].clusterHi << 16) | entry[i].clusterLo;
-                            childCluster &= 0x0FFFFFFF;
-                            tree(e, f, childCluster, spaceing + 4);
+                            printDirInfo(entry[i].name, spaceing);
+                            if (entry[i].attr == 0x10) {
+                                uint32_t childCluster = (entry[i].clusterHi << 16) | entry[i].clusterLo;
+                                childCluster &= 0x0FFFFFFF;
+                                tree(e, f, childCluster, spaceing + 4);
+                            }
                         }
                     }
                 }
             }
+            else {
+                break;
+            }
         }
+        FILE *fEntry = fopen("/home/feynoobs/Desktop/fat32.img", "rb");
+        fseek(fEntry, fatArea + cluster * sizeof(uint32_t), SEEK_SET);
+        fread(&cluster, sizeof(uint32_t), 1, fEntry);
+        fclose(fEntry);
+        cluster &= 0x0FFFFFFF;
     }
-
-    fclose(fEntry);
 }
