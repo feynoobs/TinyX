@@ -7,6 +7,9 @@
 #include "gpt.h"
 #include "fat32.h"
 
+
+void tree(GPTENTRY *e, FAT32BPB *f, uint32_t cur, uint8_t spaceing);
+
 /**
  * @brief 数値を16進数で表示する
  * 
@@ -285,10 +288,65 @@ int main(int argc, char *argv[])
     putchar('\n');
 // hexDump(2048*512);
 
-    uint32_t dataArea = e[0].firstLBA * 512 + (f.reserveSectors + f.fatSize32 * f.numFats) * 512;
-    printf("*** %x\n", dataArea);
-    fseek(fr, dataArea, SEEK_SET);
+    uint32_t dataArea = e[0].firstLBA * f.bytesPerSector + (f.reserveSectors + f.fatSize32 * f.numFats) * f.bytesPerSector;
+    uint32_t fatArea = e[0].firstLBA * f.bytesPerSector + f.reserveSectors * f.bytesPerSector;
+    // printf("*** %08x\n", dataArea);
+    // fseek(fr, dataArea, SEEK_SET);
+    tree(&e[0], &f, f.rootEntryClusPos, 0);
+
     fclose(fr);
 
     return 0;
+}
+
+static void printDirInfo(uint8_t *name, uint8_t spaceing)
+{
+    for (int i = 0; i < spaceing; ++i) {
+        putchar(' ');
+    }
+    for (int i = 0; i < 11; ++i) {
+        putchar(name[i]);
+    }
+    putchar('\n');
+}
+
+void tree(GPTENTRY *e, FAT32BPB *f, uint32_t clusPos, uint8_t spaceing)
+{
+    uint32_t dataArea = e->firstLBA * f->bytesPerSector + (f->reserveSectors + f->fatSize32 * f->numFats) * f->bytesPerSector;
+    uint32_t fatArea = e->firstLBA * f->bytesPerSector + f->reserveSectors * f->bytesPerSector;
+    uint32_t fatVal = 0;
+    uint32_t clusterSize = f->bytesPerSector * f->sectorsPerCluster;
+    uint32_t cluster = clusPos;
+    uint32_t entryCount = clusterSize / sizeof(FAT32ENTRY);
+    FAT32ENTRY entry[entryCount];
+
+    FILE *fEntry = fopen("/home/feynoobs/Desktop/fat32.img", "rb");
+    fseek(fEntry, fatArea + (clusPos - 2) * clusterSize, SEEK_SET);
+    fread(&fatVal, sizeof(uint32_t), 1, fEntry);
+    fatVal &= 0x0FFFFFFF;
+
+    uint32_t clusterAddr = dataArea + (cluster - 2) * clusterSize;
+    uint32_t entriesPerCluster = clusterSize / sizeof(FAT32ENTRY);
+    while (cluster < 0x0FFFFFF8) {
+        FILE *fDir = fopen("/home/feynoobs/Desktop/fat32.img", "rb");
+        fseek(fDir, clusterAddr, SEEK_SET);
+        fread(entry, clusterSize, 1, fDir);
+        fclose(fDir);
+        for (int i = 0; i < entryCount; ++i) {
+            printDirInfo(entry[i].name, spaceing + 4);
+            if (entry[i].name[0] != 0x00) {
+                if (entry[i].name[0] == 0xE5) {
+                    if (entry[i].name[0] != '.') {
+                        if (entry[i].attr != 0x0F) {
+                            uint32_t childCluster = (entry[i].clusterHi << 16) | entry[i].clusterLo;
+                            childCluster &= 0x0FFFFFFF;
+                            tree(e, f, childCluster, spaceing + 4);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fclose(fEntry);
 }
