@@ -335,7 +335,7 @@ void tree(GPTENTRY *e, FAT32BPB *f, uint32_t clusPos, uint8_t spaceing)
         for (int i = 0; i < entryCount; ++i) {
             printDirInfo(entry[i].name, spaceing + 4);
             if (entry[i].name[0] != 0x00) {
-                if (entry[i].name[0] == 0xE5) {
+                if (entry[i].name[0] ！= 0xE5) {
                     if (entry[i].name[0] != '.') {
                         if (entry[i].attr != 0x0F) {
                             uint32_t childCluster = (entry[i].clusterHi << 16) | entry[i].clusterLo;
