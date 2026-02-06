@@ -1,13 +1,15 @@
 /**
- * @file boot.c
- * @author your name (you@domain.com)
- * @brief
- * @version 0.1
- * @date 2023-01-03
+ * @file boot.h
+ * @author Godot
+ * @brief カーネルをメモリにロードするUEFIアプリケーション
+ * @version 0.01
+ * @date 2026/01/20
+ * @since 0.01
+ * @bug UEFIのわかりやすい日本語ドキュメントないかなあ…
  *
- * @copyright Copyright (c) 2023
- *
+ * @copyright Copyleft 🄯 199X Godot All Wrongs Reversed.
  */
+
 #include <efi.h>
 #include <efilib.h>
 
