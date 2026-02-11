@@ -24,7 +24,7 @@ BOOTX64.so: $(OBJS)
 	ld $(LDFLAGS) $(OBJS) -o $@ -lefi -lgnuefi
 
 %.EFI: %.so
-	objcopy -j .text -j .sdata -j .data -j .dynamic -j .dynsym  -j .rel -j .rela -j .reloc --target=efi-app-$(ARCH) $^ $@
+	objcopy -j .text -j .sdata -j .data -j .dynamic -j .rodata -j .dynsym  -j .rel -j .rela -j .reloc --target=efi-app-$(ARCH) $^ $@
 
 clean:
 	rm -f *.o *.so *.EFI
