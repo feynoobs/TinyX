@@ -55,19 +55,19 @@ Free(const EFI_BOOT_SERVICES *BS, const VOID *memory)
  * @param[in] src 入力元
  * @param[in] length コピーするメモリの長さ
  */
-static VOID
-Memcpy(VOID *dst, const VOID *src, UINTN length)
-{
-    UINT8 *p1 = (UINT8 *)dst;
-    const UINT8 *p2 = (UINT8 *)src;
+// static VOID
+// Memcpy(VOID *dst, const VOID *src, UINTN length)
+// {
+//     UINT8 *p1 = (UINT8 *)dst;
+//     const UINT8 *p2 = (UINT8 *)src;
 
-    while (length > 0) {
-        --length;
-        *p1 = *p2;
-        --p1;
-        --p2;
-    }
-}
+//     while (length > 0) {
+//         --length;
+//         *p1 = *p2;
+//         --p1;
+//         --p2;
+//     }
+// }
 
 /**
  * @brief 2つのメモリを比較する
@@ -135,44 +135,44 @@ IsNodeMatch(const EFI_DEVICE_PATH *imgPath, const EFI_DEVICE_PATH *devPath)
  * @param[out] files 読んだファイル数
  * @param[out] datas 各ファイルのFAT情報
  */
-static VOID
-ReadDirSub(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const FAT32BPB *fat32Data, const UINTN cluster, UINTN *files, FAT32ENTRY *datas)
-{
-    EFI_STATUS status;
-    const UINTN entries = fat32Data->bytesPerSector * fat32Data->sectorsPerCluster / sizeof(FAT32ENTRY);
-    const FAT32ENTRY fat32EntryData[entries];
-    const UINTN rootLBA = fat32Data->fatSize32 * fat32Data->numFats + fat32Data->reserveSectors;
-    const UINTN fatLBA = fat32Data->reserveSectors;
-    UINTN cursor = 0;
+// static VOID
+// ReadDirSub(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const FAT32BPB *fat32Data, const UINTN cluster, UINTN *files, FAT32ENTRY *datas)
+// {
+//     EFI_STATUS status;
+//     const UINTN entries = fat32Data->bytesPerSector * fat32Data->sectorsPerCluster / sizeof(FAT32ENTRY);
+//     const FAT32ENTRY fat32EntryData[entries];
+//     const UINTN rootLBA = fat32Data->fatSize32 * fat32Data->numFats + fat32Data->reserveSectors;
+//     const UINTN fatLBA = fat32Data->reserveSectors;
+//     UINTN cursor = 0;
 
-    for (UINTN tmpCluster = cluster; tmpCluster < 0x0FFFFFF8;) {
-        const UINTN relaticeLBA = (tmpCluster - fat32Data->rootEntryClusPos) * fat32Data->sectorsPerCluster;
-        const UINTN relativeFatLBA = tmpCluster / 128;
-        const UINT32 fatEntry[128];
-        status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA + relaticeLBA, sizeof(fat32EntryData), (VOID *)fat32EntryData);
-        if (status == EFI_SUCCESS) {
-            for (UINTN i = 0; i < entries; ++i) {
-                if (fat32EntryData[i].name[0] != 0x00) {
-                    if (fat32EntryData[i].name[0] != 0xE5) {
-                        if (datas != NULL) {
-                            Memcpy(&datas[cursor], &fat32EntryData[i], sizeof(FAT32ENTRY));
-                        }
-                        ++cursor;
-                    }
-                }
-            }
-            status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, fatLBA + relativeFatLBA, sizeof(fatEntry), (VOID *)fatEntry);
-            if (status == EFI_SUCCESS) {
-                Print(L"current -> %X\n", tmpCluster);
-                tmpCluster = fatEntry[tmpCluster % 128];
-                Print(L"next -> %X\n", tmpCluster);
-            }
-        }
-    }
-    *files = cursor;
+//     for (UINTN tmpCluster = cluster; tmpCluster < 0x0FFFFFF8;) {
+//         const UINTN relaticeLBA = (tmpCluster - fat32Data->rootEntryClusPos) * fat32Data->sectorsPerCluster;
+//         const UINTN relativeFatLBA = tmpCluster / 128;
+//         const UINT32 fatEntry[128];
+//         status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA + relaticeLBA, sizeof(fat32EntryData), (VOID *)fat32EntryData);
+//         if (status == EFI_SUCCESS) {
+//             for (UINTN i = 0; i < entries; ++i) {
+//                 if (fat32EntryData[i].name[0] != 0x00) {
+//                     if (fat32EntryData[i].name[0] != 0xE5) {
+//                         if (datas != NULL) {
+//                             Memcpy(&datas[cursor], &fat32EntryData[i], sizeof(FAT32ENTRY));
+//                         }
+//                         ++cursor;
+//                     }
+//                 }
+//             }
+//             status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, fatLBA + relativeFatLBA, sizeof(fatEntry), (VOID *)fatEntry);
+//             if (status == EFI_SUCCESS) {
+//                 Print(L"current -> %X\n", tmpCluster);
+//                 tmpCluster = fatEntry[tmpCluster % 128];
+//                 Print(L"next -> %X\n", tmpCluster);
+//             }
+//         }
+//     }
+//     *files = cursor;
 
-    return datas;
-}
+//     return datas;
+// }
 
 /**
  * @brief 指定されたクラスタのファイル一覧を取得する
@@ -184,19 +184,19 @@ ReadDirSub(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const FAT32BP
  * @param[out] files 読んだファイル数
  * @return ファイルリストのポインタ
  */
-static FAT32ENTRY*
-ReadDir(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const FAT32BPB *fat32Data, const UINTN cluster, UINTN *files)
-{
-    FAT32ENTRY* datas = NULL;
-    *files = 0;
-    ReadDirSub(BS, block, fat32Data, cluster, files, NULL);
-    if (*files != 0) {
-        datas = Malloc(BS, sizeof(FAT32ENTRY) * (*files));
-        ReadDirSub(BS, block, fat32Data, cluster, files, datas);
-    }
+// static FAT32ENTRY*
+// ReadDir(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const FAT32BPB *fat32Data, const UINTN cluster, UINTN *files)
+// {
+//     FAT32ENTRY* datas = NULL;
+//     *files = 0;
+//     ReadDirSub(BS, block, fat32Data, cluster, files, NULL);
+//     if (*files != 0) {
+//         datas = Malloc(BS, sizeof(FAT32ENTRY) * (*files));
+//         ReadDirSub(BS, block, fat32Data, cluster, files, datas);
+//     }
 
-    return datas;
-}
+//     return datas;
+// }
 
 
 /**
@@ -206,94 +206,94 @@ ReadDir(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block, const FAT32BPB *
  * @param[in] block ブロックIO
  * @note この関数からカーネルを実行するため戻ってこない
  */
-static VOID
-LoadKernel(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block)
-{
-    EFI_STATUS status;
+// static VOID
+// LoadKernel(const EFI_BOOT_SERVICES *BS, const EFI_BLOCK_IO *block)
+// {
+//     EFI_STATUS status;
 
-    Print(L"block size:%d\n", block->Media->BlockSize);
+//     Print(L"block size:%d\n", block->Media->BlockSize);
 
-    FAT32BPB fat32Data;
-    status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, 0, sizeof(FAT32BPB), (VOID *)&fat32Data);
-    if (status == EFI_SUCCESS) {
-        Print(L"rootEntryClusPos -> %u\n", fat32Data.rootEntryClusPos);
-        UINTN files;
-        FAT32ENTRY *fileEntry = ReadDir(BS, block, &fat32Data, fat32Data.rootEntryClusPos, &files);
-        Print(L"files2 -> %X\n", files);
-        for (INT16 i = 0; i < files; ++i) {
-            for (CHAR8 j = 0; j < sizeof(fileEntry[i].name); ++j) {
-                Print(L"%c", fileEntry[i].name[j]);
-            }
-            Print(L"\n");
-        }
-        Print(L"Fat32 Dump...\n");
-        /*
-        Print(L"bytesPerSector -> %u\n", fat32Data.bytesPerSector);
-        Print(L"sectorsPerCluster -> %u\n", fat32Data->sectorsPerCluster);
-        Print(L"sectorPerTruck -> %u\n", fat32Data->sectorPerTruck);
-        Print(L"reserveSectors -> %u\n", fat32Data->reserveSectors);
-        Print(L"numFats -> %u\n", fat32Data->numFats);
-        Print(L"totalSector32 -> %u\n", fat32Data->totalSector32);
-        Print(L"fatSize32 -> %u\n", fat32Data->fatSize32);
-        Print(L"fsinfoEntrySector -> %u\n", fat32Data->fsinfoEntrySector);
-        Print(L"backupBootSector -> %u\n", fat32Data->backupBootSector);
-        Print(L"signature  -> %04X\n", fat32Data->signature);
+//     FAT32BPB fat32Data;
+//     status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, 0, sizeof(FAT32BPB), (VOID *)&fat32Data);
+//     if (status == EFI_SUCCESS) {
+//         Print(L"rootEntryClusPos -> %u\n", fat32Data.rootEntryClusPos);
+//         UINTN files;
+//         FAT32ENTRY *fileEntry = ReadDir(BS, block, &fat32Data, fat32Data.rootEntryClusPos, &files);
+//         Print(L"files2 -> %X\n", files);
+//         for (INT16 i = 0; i < files; ++i) {
+//             for (CHAR8 j = 0; j < sizeof(fileEntry[i].name); ++j) {
+//                 Print(L"%c", fileEntry[i].name[j]);
+//             }
+//             Print(L"\n");
+//         }
+//         Print(L"Fat32 Dump...\n");
+//         /*
+//         Print(L"bytesPerSector -> %u\n", fat32Data.bytesPerSector);
+//         Print(L"sectorsPerCluster -> %u\n", fat32Data->sectorsPerCluster);
+//         Print(L"sectorPerTruck -> %u\n", fat32Data->sectorPerTruck);
+//         Print(L"reserveSectors -> %u\n", fat32Data->reserveSectors);
+//         Print(L"numFats -> %u\n", fat32Data->numFats);
+//         Print(L"totalSector32 -> %u\n", fat32Data->totalSector32);
+//         Print(L"fatSize32 -> %u\n", fat32Data->fatSize32);
+//         Print(L"fsinfoEntrySector -> %u\n", fat32Data->fsinfoEntrySector);
+//         Print(L"backupBootSector -> %u\n", fat32Data->backupBootSector);
+//         Print(L"signature  -> %04X\n", fat32Data->signature);
 
-        UINTN rootLBA = fat32Data->fatSize32 * fat32Data->numFats + fat32Data->reserveSectors;
-        UINTN fatLBA = fat32Data->reserveSectors;
-        fat32entry *fat32EntryData = (fat32entry *)Malloc(BS, sizeof(fat32entry) * 16);
-        status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA, sizeof(fat32entry) * 16, (VOID *)fat32EntryData);
-        if (status == EFI_SUCCESS) {
-            Print(L"Fat32 Entry Dump...\n");
-            for (INT8 i = 0; i < 16; ++i) {
-                if (fat32EntryData[i].name[0] != 0x00) {
-                    if (fat32EntryData[i].name[0] != 0xE5) {
-                        UINTN cluster = fat32EntryData[i].clusterHi << 16 | fat32EntryData[i].clusterLo;
-                        Print(L"name ->");
-                        for (INT8 j = 0; j < sizeof(fat32EntryData[i].name); ++j) {
-                            Print(L"%c", fat32EntryData[i].name[j]);
-                        }
-                        Print(L"\n");
-                        Print(L"cluster -> %d\n", cluster);
-                        Print(L"fileSize -> %d\n", fat32EntryData[i].fileSize);
-                        if ((fat32EntryData[i].name[0] == 'K') &&
-                            (fat32EntryData[i].name[1] == 'E') &&
-                            (fat32EntryData[i].name[2] == 'R') &&
-                            (fat32EntryData[i].name[3] == 'N') &&
-                            (fat32EntryData[i].name[4] == 'E') &&
-                            (fat32EntryData[i].name[5] == 'L')) {
-                            UINTN allocate = 0;
-                            UINTN size = fat32EntryData[i].fileSize;
-                            const UINT16 ONE = 512 * fat32Data->sectorsPerCluster;
+//         UINTN rootLBA = fat32Data->fatSize32 * fat32Data->numFats + fat32Data->reserveSectors;
+//         UINTN fatLBA = fat32Data->reserveSectors;
+//         fat32entry *fat32EntryData = (fat32entry *)Malloc(BS, sizeof(fat32entry) * 16);
+//         status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA, sizeof(fat32entry) * 16, (VOID *)fat32EntryData);
+//         if (status == EFI_SUCCESS) {
+//             Print(L"Fat32 Entry Dump...\n");
+//             for (INT8 i = 0; i < 16; ++i) {
+//                 if (fat32EntryData[i].name[0] != 0x00) {
+//                     if (fat32EntryData[i].name[0] != 0xE5) {
+//                         UINTN cluster = fat32EntryData[i].clusterHi << 16 | fat32EntryData[i].clusterLo;
+//                         Print(L"name ->");
+//                         for (INT8 j = 0; j < sizeof(fat32EntryData[i].name); ++j) {
+//                             Print(L"%c", fat32EntryData[i].name[j]);
+//                         }
+//                         Print(L"\n");
+//                         Print(L"cluster -> %d\n", cluster);
+//                         Print(L"fileSize -> %d\n", fat32EntryData[i].fileSize);
+//                         if ((fat32EntryData[i].name[0] == 'K') &&
+//                             (fat32EntryData[i].name[1] == 'E') &&
+//                             (fat32EntryData[i].name[2] == 'R') &&
+//                             (fat32EntryData[i].name[3] == 'N') &&
+//                             (fat32EntryData[i].name[4] == 'E') &&
+//                             (fat32EntryData[i].name[5] == 'L')) {
+//                             UINTN allocate = 0;
+//                             UINTN size = fat32EntryData[i].fileSize;
+//                             const UINT16 ONE = 512 * fat32Data->sectorsPerCluster;
 
-                            for (INT8 k = 0; cluster < 0x0FFFFFF8; ++k) {
-                                UINT16 reader = size;
-                                if (size > ONE) {
-                                    size -= ONE;
-                                    reader = ONE;
-                                    allocate += ONE;
-                                }
-                                else {
-                                    allocate += size;
-                                }
-                                UINT32 fat[128];
-                                UINT8 clusterData[ONE];
+//                             for (INT8 k = 0; cluster < 0x0FFFFFF8; ++k) {
+//                                 UINT16 reader = size;
+//                                 if (size > ONE) {
+//                                     size -= ONE;
+//                                     reader = ONE;
+//                                     allocate += ONE;
+//                                 }
+//                                 else {
+//                                     allocate += size;
+//                                 }
+//                                 UINT32 fat[128];
+//                                 UINT8 clusterData[ONE];
 
-                                uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, fatLBA + cluster / 128, 512, (VOID *)fat);
-                                status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA + (cluster - fat32Data->rootEntryClusPos) * fat32Data->sectorsPerCluster, ONE, (VOID *)clusterData);
-                                for (INT16 m = 0; m < reader; ++m) {
-                                    Print(L"%c", clusterData[m]);
-                                }
-                                cluster = fat[cluster];
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        */
-    }
-}
+//                                 uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, fatLBA + cluster / 128, 512, (VOID *)fat);
+//                                 status = uefi_call_wrapper(block->ReadBlocks, 5, block, block->Media->MediaId, rootLBA + (cluster - fat32Data->rootEntryClusPos) * fat32Data->sectorsPerCluster, ONE, (VOID *)clusterData);
+//                                 for (INT16 m = 0; m < reader; ++m) {
+//                                     Print(L"%c", clusterData[m]);
+//                                 }
+//                                 cluster = fat[cluster];
+//                             }
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//         */
+//     }
+// }
 
 /**
  * @brief UEFI エントリー
@@ -410,7 +410,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *table)
                             devPath = NextDevicePathNode(devPath);
                         }
                         if (match == TRUE) {
-                            LoadKernel(BS, block);
+                            // LoadKernel(BS, block);
                         }
                     }
                 }
