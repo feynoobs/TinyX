@@ -91,8 +91,8 @@ Memcmp(const VOID *s1, const VOID *s2, UINTN length)
         if (ret != 0) {
             break;
         }
-        --p1;
-        --p2;
+        ++p1;
+        ++p2;
     }
 
     return ret;
